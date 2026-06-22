@@ -1,5 +1,5 @@
 /**
- * NemoClaw Agent Heartbeat
+ * NemoClawd Agent Heartbeat
  *
  * Periodically sends liveness/uptime feedback to the 8004 Agent Registry.
  * Also checks Pump.fun token status and reports to Telegram if configured.

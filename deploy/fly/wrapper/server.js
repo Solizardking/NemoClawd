@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: Apache-2.0
-// NemoClaw Fly.io wrapper — setup wizard + reverse proxy to OpenClaw gateway.
+// NemoClawd Fly.io wrapper — setup wizard + reverse proxy to OpenClaw gateway.
 
 const http = require("http");
 const fs = require("fs");
@@ -12,10 +12,10 @@ const crypto = require("crypto");
 const PORT = parseInt(process.env.PORT || "3000", 10);
 const GATEWAY_PORT = 18789;
 const DATA_DIR = process.env.DATA_DIR || "/data";
-const CONFIG_PATH = path.join(DATA_DIR, "nemoclaw.json");
+const CONFIG_PATH = path.join(DATA_DIR, "nemoclawd.json");
 const SETUP_PASSWORD = process.env.SETUP_PASSWORD || "";
 const GATEWAY_TOKEN =
-  process.env.NEMOCLAW_GATEWAY_TOKEN ||
+  process.env.NEMOCLAWD_GATEWAY_TOKEN ||
   crypto.randomBytes(24).toString("hex");
 
 let gatewayProc = null;
@@ -46,7 +46,7 @@ function checkBasicAuth(req) {
 
 function unauthorized(res) {
   res.writeHead(401, {
-    "WWW-Authenticate": 'Basic realm="NemoClaw Setup"',
+    "WWW-Authenticate": 'Basic realm="NemoClawd Setup"',
     "Content-Type": "text/plain",
   });
   res.end("Unauthorized");
@@ -141,12 +141,12 @@ function startGateway() {
   if (cfg.privyAppSecret) env.PRIVY_APP_SECRET = cfg.privyAppSecret;
   if (cfg.heliusApiKey) env.HELIUS_API_KEY = cfg.heliusApiKey;
 
-  env.NEMOCLAW_GATEWAY_TOKEN = GATEWAY_TOKEN;
+  env.NEMOCLAWD_GATEWAY_TOKEN = GATEWAY_TOKEN;
   env.PUBLIC_PORT = String(GATEWAY_PORT);
   env.CHAT_UI_URL = `http://127.0.0.1:${GATEWAY_PORT}`;
 
   const logFile = fs.openSync(path.join(DATA_DIR, "gateway.log"), "a");
-  gatewayProc = spawn("/usr/local/bin/nemoclaw-start", [], {
+  gatewayProc = spawn("/usr/local/bin/nemoclawd-start", [], {
     env,
     stdio: ["ignore", logFile, logFile],
     detached: true,
@@ -183,10 +183,10 @@ function renderSetupPage() {
   const statusText = running ? "Running" : "Stopped";
 
   return htmlPage(
-    "NemoClaw Setup",
+    "NemoClawd Setup",
     `
-<h1>NemoClaw Setup</h1>
-<p>Configure your NemoClaw deployment on Fly.io.</p>
+<h1>NemoClawd Setup</h1>
+<p>Configure your NemoClawd deployment on Fly.io.</p>
 
 <div class="card">
   <h2>Gateway Status</h2>
@@ -280,10 +280,10 @@ function renderSetupPage() {
 
 <div class="card">
   <h2>Connect Local CLI</h2>
-  <pre class="log">nemoclaw config set gateway.mode remote
-nemoclaw config set gateway.remote.url wss://${process.env.FLY_APP_NAME || "your-app"}.fly.dev
-nemoclaw config set gateway.remote.token ${GATEWAY_TOKEN}
-nemoclaw health</pre>
+  <pre class="log">nemoclawd config set gateway.mode remote
+nemoclawd config set gateway.remote.url wss://${process.env.FLY_APP_NAME || "your-app"}.fly.dev
+nemoclawd config set gateway.remote.token ${GATEWAY_TOKEN}
+nemoclawd health</pre>
 </div>
 `
   );
@@ -449,7 +449,7 @@ const server = http.createServer(async (req, res) => {
       const cfg = loadConfig();
       res.writeHead(200, {
         "Content-Type": "application/json",
-        "Content-Disposition": "attachment; filename=nemoclaw-config.json",
+        "Content-Disposition": "attachment; filename=nemoclawd-config.json",
       });
       return res.end(JSON.stringify(cfg, null, 2));
     }
@@ -477,7 +477,7 @@ if (cfg.provider && cfg.apiKey) {
 }
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`[wrapper] NemoClaw wrapper listening on :${PORT}`);
+  console.log(`[wrapper] NemoClawd wrapper listening on :${PORT}`);
   console.log(`[wrapper] Setup wizard: http://0.0.0.0:${PORT}/setup`);
   console.log(`[wrapper] Health check: http://0.0.0.0:${PORT}/healthz`);
 });

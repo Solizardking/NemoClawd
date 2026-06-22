@@ -1,4 +1,4 @@
-# NemoClaw on DGX Spark
+# NemoClawd on DGX Spark
 
 > **WIP** — This page is actively being updated as we work through Spark installs. Expect changes.
 
@@ -6,12 +6,12 @@
 
 ```bash
 # Clone and install
-git clone https://github.com/NVIDIA/NemoClaw.git
-cd NemoClaw
+git clone https://github.com/NVIDIA/NemoClawd.git
+cd NemoClawd
 sudo npm install -g .
 
 # Spark-specific setup (configures Docker for cgroup v2, then runs normal setup)
-nemoclaw setup-spark
+nemoclawd setup-spark
 ```
 
 That's it. `setup-spark` handles everything below automatically.
@@ -92,7 +92,7 @@ newgrp docker  # or log out and back in
 ### Then run the onboard wizard
 
 ```bash
-nemoclaw onboard
+nemoclawd onboard
 ```
 
 ## Known Issues
@@ -110,12 +110,12 @@ nemoclaw onboard
 ```bash
 # Check sandbox is running
 openshell sandbox list
-# Should show: nemoclaw  Ready
+# Should show: nemoclawd  Ready
 
 # Test the agent
-openshell sandbox connect nemoclaw
+openshell sandbox connect nemoclawd
 # Inside sandbox:
-nemoclaw-start openclaw agent --agent main --local -m 'hello' --session-id test
+nemoclawd-start openclaw agent --agent main --local -m 'hello' --session-id test
 
 # Monitor network egress (separate terminal)
 openshell term
@@ -128,6 +128,6 @@ DGX Spark (Ubuntu 24.04, cgroup v2)
   └── Docker (28.x, cgroupns=host)
        └── OpenShell gateway container
             └── k3s (embedded)
-                 └── nemoclaw sandbox pod
-                      └── OpenClaw agent + NemoClaw plugin
+                 └── nemoclawd sandbox pod
+                      └── OpenClaw agent + NemoClawd plugin
 ```

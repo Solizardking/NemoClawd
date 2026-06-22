@@ -1,11 +1,11 @@
 ---
 title:
-  page: "NemoClaw License — Apache 2.0"
+  page: "NemoClawd License — Apache 2.0"
   nav: "License"
-description: "Apache 2.0 license for the NemoClaw project."
-keywords: ["nemoclaw license", "nemoclaw apache 2.0"]
+description: "Apache 2.0 license for the NemoClawd project."
+keywords: ["nemoclawd license", "nemoclawd apache 2.0"]
 topics: ["generative_ai"]
-tags: ["nemoclaw", "licensing"]
+tags: ["nemoclawd", "licensing"]
 content:
   type: reference
   difficulty: technical_beginner
@@ -20,7 +20,7 @@ status: published
 
 # License
 
-NemoClaw is licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+NemoClawd is licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
 ```text
 Copyright 2026 NVIDIA Corporation
@@ -38,4 +38,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-See the full license text in the [LICENSE](https://github.com/x402agent/NemoClaw/blob/main/LICENSE) file.
+See the full license text in the [LICENSE](https://github.com/x402agent/NemoClawd/blob/main/LICENSE) file.

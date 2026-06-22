@@ -9,7 +9,7 @@ const os = require("os");
 const { ROOT, run, runCapture } = require("./runner");
 const registry = require("./registry");
 
-const PRESETS_DIR = path.join(ROOT, "nemoclaw-blueprint", "policies", "presets");
+const PRESETS_DIR = path.join(ROOT, "nemoclawd-blueprint", "policies", "presets");
 
 function listPresets() {
   if (!fs.existsSync(PRESETS_DIR)) return [];
@@ -156,7 +156,7 @@ function applyPreset(sandboxName, presetName) {
   }
 
   // Write temp file and apply
-  const tmpFile = path.join(os.tmpdir(), `nemoclaw-policy-${Date.now()}.yaml`);
+  const tmpFile = path.join(os.tmpdir(), `nemoclawd-policy-${Date.now()}.yaml`);
   fs.writeFileSync(tmpFile, merged, "utf-8");
 
   try {

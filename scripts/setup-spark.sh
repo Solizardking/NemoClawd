@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-# NemoClaw setup for DGX Spark devices.
+# NemoClawd setup for DGX Spark devices.
 #
 # Spark ships Ubuntu 24.04 (cgroup v2) + Docker 28.x but no k3s.
 # OpenShell's gateway starts k3s inside a Docker container, which
@@ -10,7 +10,7 @@
 # for that.
 #
 # Usage:
-#   sudo nemoclaw setup-spark
+#   sudo nemoclawd setup-spark
 #   # or directly:
 #   sudo bash scripts/setup-spark.sh
 #
@@ -35,11 +35,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # ── Pre-flight checks ─────────────────────────────────────────────
 
 if [ "$(uname -s)" != "Linux" ]; then
-  fail "This script is for DGX Spark (Linux). Use 'nemoclaw setup' for macOS."
+  fail "This script is for DGX Spark (Linux). Use 'nemoclawd setup' for macOS."
 fi
 
 if [ "$(id -u)" -ne 0 ]; then
-  fail "Must run as root: sudo nemoclaw setup-spark"
+  fail "Must run as root: sudo nemoclawd setup-spark"
 fi
 
 # Detect the real user (not root) for docker group add
@@ -137,5 +137,5 @@ fi
 echo ""
 info "DGX Spark Docker configuration complete."
 info ""
-info "Next step: run 'nemoclaw onboard' to set up your sandbox."
-info "  nemoclaw onboard"
+info "Next step: run 'nemoclawd onboard' to set up your sandbox."
+info "  nemoclawd onboard"

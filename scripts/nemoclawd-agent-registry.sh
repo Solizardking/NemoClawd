@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# NemoClawd Agent Registry — registers the agent with the Solana Agent Registry
-# and Pump.fun, then enters a heartbeat loop for uptime/liveness feedback.
+# NemoClawd Agent Registry — Launch Script
+#
+# Registers the agent with 8004 Solana Agent Registry and Pump.fun,
+# then enters a heartbeat loop for uptime/liveness feedback.
 
 set -euo pipefail
 
 REGISTRY_DIR="/opt/pump-fun/agent-registry"
 
+# Fall back to local dev path if /opt doesn't exist
 if [ ! -d "${REGISTRY_DIR}" ]; then
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   REGISTRY_DIR="$(dirname "${SCRIPT_DIR}")/Pump-Fun/agent-registry"

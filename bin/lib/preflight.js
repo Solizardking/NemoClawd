@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 //
-// Preflight checks for NemoClaw onboarding.
+// Preflight checks for NemoClawd onboarding.
 
 const fs = require("fs");
 const { runCapture } = require("./runner");

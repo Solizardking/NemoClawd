@@ -60,11 +60,11 @@ SANDBOX_NAME="e2e-full"
 # ══════════════════════════════════════════════════════════════════
 section "Phase 0: Pre-cleanup"
 info "Destroying any leftover sandbox/gateway from previous runs..."
-if command -v nemoclaw > /dev/null 2>&1; then
-  nemoclaw "$SANDBOX_NAME" destroy 2>/dev/null || true
+if command -v nemoclawd > /dev/null 2>&1; then
+  nemoclawd "$SANDBOX_NAME" destroy 2>/dev/null || true
 fi
 openshell sandbox delete "$SANDBOX_NAME" 2>/dev/null || true
-openshell gateway destroy -g nemoclaw 2>/dev/null || true
+openshell gateway destroy -g nemoclawd 2>/dev/null || true
 pass "Pre-cleanup complete"
 
 # ══════════════════════════════════════════════════════════════════
@@ -103,19 +103,19 @@ fi
 # ══════════════════════════════════════════════════════════════════
 # Phase 2: Install
 # ══════════════════════════════════════════════════════════════════
-section "Phase 2: Install nemoclaw"
+section "Phase 2: Install nemoclawd"
 
 cd "$REPO"
 
-# Install from source (same as install.sh's install_nemoclaw does in a repo dir)
+# Install from source (same as install.sh's install_nemoclawd does in a repo dir)
 PACKAGE_NAME="$(node -p "try { require('./package.json').name } catch { '' }" 2>/dev/null || true)"
-if [ "$PACKAGE_NAME" = "@mawdbotsonsolana/nemoclaw" ]; then
-  info "Installing nemoclaw from source (npm install + npm link)..."
+if [ "$PACKAGE_NAME" = "@mawdbotsonsolana/nemoclawd" ]; then
+  info "Installing nemoclawd from source (npm install + npm link)..."
   npm install 2>&1 | tail -3
   npm link 2>&1 | tail -3
 else
-  info "Installing nemoclaw globally..."
-  npm install -g @mawdbotsonsolana/nemoclaw 2>&1 | tail -3
+  info "Installing nemoclawd globally..."
+  npm install -g @mawdbotsonsolana/nemoclawd 2>&1 | tail -3
 fi
 
 # Source bashrc in case nvm/asdf modified it
@@ -123,16 +123,16 @@ if [ -f "$HOME/.bashrc" ]; then
   source "$HOME/.bashrc" 2>/dev/null || true
 fi
 
-if command -v nemoclaw > /dev/null 2>&1; then
-  pass "nemoclaw installed at $(command -v nemoclaw)"
+if command -v nemoclawd > /dev/null 2>&1; then
+  pass "nemoclawd installed at $(command -v nemoclawd)"
 else
-  fail "nemoclaw not found on PATH after install"
+  fail "nemoclawd not found on PATH after install"
   exit 1
 fi
 
-nemoclaw --help > /dev/null 2>&1 \
-  && pass "nemoclaw --help exits 0" \
-  || fail "nemoclaw --help failed"
+nemoclawd --help > /dev/null 2>&1 \
+  && pass "nemoclawd --help exits 0" \
+  || fail "nemoclawd --help failed"
 
 # ══════════════════════════════════════════════════════════════════
 # Phase 3: Onboard (real openshell, real gateway, real sandbox)
@@ -144,20 +144,20 @@ section "Phase 3: Onboard"
 #   2. Inference choice: "" (empty = default = NVIDIA Cloud API)
 #   3. Policy presets: "Y" (apply suggested)
 # ensureApiKey() does NOT prompt when NVIDIA_API_KEY is in env.
-info "Running nemoclaw onboard (non-interactive)..."
+info "Running nemoclawd onboard (non-interactive)..."
 info "This may take several minutes on first run (builds sandbox image)..."
 # Write to a file instead of $(…) because openshell's background port-forward
 # inherits the pipe's file descriptors, which prevents $(…) from returning.
 ONBOARD_LOG="$(mktemp)"
-printf "${SANDBOX_NAME}\n\nY\n" | nemoclaw onboard > "$ONBOARD_LOG" 2>&1
+printf "${SANDBOX_NAME}\n\nY\n" | nemoclawd onboard > "$ONBOARD_LOG" 2>&1
 onboard_exit=$?
 onboard_output="$(cat "$ONBOARD_LOG")"
 rm -f "$ONBOARD_LOG"
 
 if [ $onboard_exit -eq 0 ]; then
-  pass "nemoclaw onboard completed (exit 0)"
+  pass "nemoclawd onboard completed (exit 0)"
 else
-  fail "nemoclaw onboard failed (exit $onboard_exit)"
+  fail "nemoclawd onboard failed (exit $onboard_exit)"
   echo "$onboard_output" | tail -30
 fi
 
@@ -174,15 +174,15 @@ echo "$onboard_output" | grep -qi "nvidia-nim\|NVIDIA Cloud API" \
 # ══════════════════════════════════════════════════════════════════
 section "Phase 4: Sandbox verification"
 
-list_output=$(nemoclaw list 2>&1)
+list_output=$(nemoclawd list 2>&1)
 echo "$list_output" | grep -q "$SANDBOX_NAME" \
-  && pass "nemoclaw list contains '${SANDBOX_NAME}'" \
-  || fail "nemoclaw list does not contain '${SANDBOX_NAME}'"
+  && pass "nemoclawd list contains '${SANDBOX_NAME}'" \
+  || fail "nemoclawd list does not contain '${SANDBOX_NAME}'"
 
-status_output=$(nemoclaw "$SANDBOX_NAME" status 2>&1)
+status_output=$(nemoclawd "$SANDBOX_NAME" status 2>&1)
 [ $? -eq 0 ] \
-  && pass "nemoclaw ${SANDBOX_NAME} status exits 0" \
-  || fail "nemoclaw ${SANDBOX_NAME} status failed"
+  && pass "nemoclawd ${SANDBOX_NAME} status exits 0" \
+  || fail "nemoclawd ${SANDBOX_NAME} status failed"
 
 # Ensure inference is configured (onboard's openshell inference set may have
 # failed due to --no-verify flag incompatibility — configure it directly)
@@ -269,10 +269,10 @@ fi
 # ══════════════════════════════════════════════════════════════════
 section "Phase 6: Cleanup"
 
-nemoclaw "$SANDBOX_NAME" destroy 2>&1 | tail -3 || true
-openshell gateway destroy -g nemoclaw 2>/dev/null || true
+nemoclawd "$SANDBOX_NAME" destroy 2>&1 | tail -3 || true
+openshell gateway destroy -g nemoclawd 2>/dev/null || true
 
-list_after=$(nemoclaw list 2>&1)
+list_after=$(nemoclawd list 2>&1)
 echo "$list_after" | grep -q "$SANDBOX_NAME" \
   && fail "Sandbox ${SANDBOX_NAME} still in list after destroy" \
   || pass "Sandbox ${SANDBOX_NAME} removed"

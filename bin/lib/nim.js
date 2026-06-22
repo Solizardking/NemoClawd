@@ -7,7 +7,7 @@ const { run, runCapture } = require("./runner");
 const nimImages = require("./nim-images.json");
 
 function containerName(sandboxName) {
-  return `nemoclaw-nim-${sandboxName}`;
+  return `nemoclawd-nim-${sandboxName}`;
 }
 
 function getImageForModel(modelName) {

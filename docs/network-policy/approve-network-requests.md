@@ -1,11 +1,11 @@
 ---
 title:
-  page: "Approve or Deny NemoClaw Agent Network Requests"
+  page: "Approve or Deny NemoClawd Agent Network Requests"
   nav: "Approve Network Requests"
 description: "Review and approve blocked agent network requests in the TUI."
-keywords: ["nemoclaw approve network requests", "sandbox egress approval tui"]
+keywords: ["nemoclawd approve network requests", "sandbox egress approval tui"]
 topics: ["generative_ai", "ai_agents"]
-tags: ["openclaw", "openshell", "network_policy", "security", "nemoclaw"]
+tags: ["openclaw", "openshell", "network_policy", "security", "nemoclawd"]
 content:
   type: how_to
   difficulty: technical_beginner
@@ -25,7 +25,7 @@ OpenShell intercepts these requests and presents them in the TUI for operator ap
 
 ## Prerequisites
 
-- A running NemoClaw sandbox.
+- A running NemoClawd sandbox.
 - The OpenShell CLI on your `PATH`.
 
 ## Open the TUI
@@ -39,7 +39,7 @@ $ openshell term
 For a remote sandbox, pass the instance name:
 
 ```console
-$ ssh my-gpu-box 'cd /home/ubuntu/nemoclaw && . .env && openshell term'
+$ ssh my-gpu-box 'cd /home/ubuntu/nemoclawd && . .env && openshell term'
 ```
 
 The TUI displays the sandbox state, active inference provider, and a live feed of network activity.

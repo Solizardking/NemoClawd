@@ -1,24 +1,24 @@
-# Deploy NemoClaw on Fly.io
+# Deploy NemoClawd on Fly.io
 
-To deploy NemoClaw to Fly.io, run the deploy script from the repo root. It handles everything — app creation, volumes, secrets, and deployment.
+To deploy NemoClawd to Fly.io, run the deploy script from the repo root. It handles everything — app creation, volumes, secrets, and deployment.
 
 ```bash
-cd /path/to/nemoclaw
+cd /path/to/nemoclawd
 bash deploy/fly/deploy.sh
 ```
 
 You'll need `flyctl` installed, a Fly.io account (free trial works), and an LLM API key (Anthropic, OpenAI, NVIDIA, Google Gemini, OpenRouter, Moonshot AI, or MiniMax).
 
-## What is NemoClaw?
+## What is NemoClawd?
 
-NemoClaw is a one-shot Solana developer agent with Pump-Fun tooling, Privy agentic wallets, and a Telegram-native operator stack. It runs on top of OpenClaw as a persistent AI gateway reachable from Discord, Telegram, Slack, or your local CLI.
+NemoClawd is a one-shot Solana developer agent with Pump-Fun tooling, Privy agentic wallets, and a Telegram-native operator stack. It runs on top of OpenClaw as a persistent AI gateway reachable from Discord, Telegram, Slack, or your local CLI.
 
 ## How it works
 
-The deploy script sets up a wrapper server that manages the NemoClaw gateway and provides a browser-based setup wizard:
+The deploy script sets up a wrapper server that manages the NemoClawd gateway and provides a browser-based setup wizard:
 
 ```
-Internet → Fly.io proxy → Wrapper server (:3000) → NemoClaw gateway (:18789)
+Internet → Fly.io proxy → Wrapper server (:3000) → NemoClawd gateway (:18789)
                               ├── /setup      → Setup wizard (password-protected)
                               ├── /healthz    → Health check (no auth)
                               └── /*          → Proxied to gateway
@@ -30,7 +30,7 @@ All state lives on a persistent volume mounted at `/data`, so your configuration
 
 | Prompt | Description |
 |--------|-------------|
-| **App name** | Defaults to `nemoclaw-XXXX` (random suffix). Becomes your URL: `https://your-app.fly.dev` |
+| **App name** | Defaults to `nemoclawd-XXXX` (random suffix). Becomes your URL: `https://your-app.fly.dev` |
 | **Region** | Where to run your Machine (defaults to `iad` / Virginia). [See regions](https://fly.io/docs/reference/regions/) |
 | **Setup password** | Protects the `/setup` wizard. Pick something strong. |
 | **LLM provider** | Anthropic, OpenAI, NVIDIA, Google Gemini, OpenRouter, Moonshot AI, or MiniMax |
@@ -60,7 +60,7 @@ Visit `https://your-app.fly.dev/setup` in your browser. Log in with any username
 - Change your LLM provider and API key
 - Configure Solana RPC, Helius, and Privy wallet credentials
 - Add or update Discord, Telegram, and Slack channel connections
-- Edit the raw NemoClaw config
+- Edit the raw NemoClawd config
 - View gateway logs
 - Export and import configuration backups
 
@@ -82,13 +82,13 @@ All sensitive values are stored as Fly secrets, encrypted at rest and injected a
 | Secret | Required | Description |
 |--------|----------|-------------|
 | `SETUP_PASSWORD` | Yes | Protects the `/setup` wizard |
-| `NEMOCLAW_GATEWAY_TOKEN` | Yes | Auth token for gateway connections (auto-generated) |
-| `NEMOCLAW_API_KEY` | Yes | Your LLM provider API key |
-| `NEMOCLAW_AUTH_CHOICE` | Yes | Provider identifier (set by deploy script) |
-| `NEMOCLAW_DISCORD_TOKEN` | No | Discord bot token |
-| `NEMOCLAW_TELEGRAM_TOKEN` | No | Telegram bot token |
-| `NEMOCLAW_SLACK_BOT_TOKEN` | No | Slack bot token (`xoxb-...`) |
-| `NEMOCLAW_SLACK_APP_TOKEN` | No | Slack app token (`xapp-...`) |
+| `NEMOCLAWD_GATEWAY_TOKEN` | Yes | Auth token for gateway connections (auto-generated) |
+| `NEMOCLAWD_API_KEY` | Yes | Your LLM provider API key |
+| `NEMOCLAWD_AUTH_CHOICE` | Yes | Provider identifier (set by deploy script) |
+| `NEMOCLAWD_DISCORD_TOKEN` | No | Discord bot token |
+| `NEMOCLAWD_TELEGRAM_TOKEN` | No | Telegram bot token |
+| `NEMOCLAWD_SLACK_BOT_TOKEN` | No | Slack bot token (`xoxb-...`) |
+| `NEMOCLAWD_SLACK_APP_TOKEN` | No | Slack app token (`xapp-...`) |
 | `SOLANA_RPC_URL` | No | Custom Solana RPC endpoint |
 | `HELIUS_API_KEY` | No | Helius RPC API key |
 | `PRIVY_APP_ID` | No | Privy agentic wallet app ID |
@@ -97,7 +97,7 @@ All sensitive values are stored as Fly secrets, encrypted at rest and injected a
 To update a secret after deployment:
 
 ```bash
-fly secrets set NEMOCLAW_API_KEY=sk-new-key-here -a your-app-name
+fly secrets set NEMOCLAWD_API_KEY=sk-new-key-here -a your-app-name
 ```
 
 The Machine restarts automatically when secrets change.
@@ -113,12 +113,12 @@ fly scale vm shared-cpu-4x -a your-app-name
 
 ### Persistent storage
 
-NemoClaw stores all state on a Fly Volume mounted at `/data`:
+NemoClawd stores all state on a Fly Volume mounted at `/data`:
 
-- `nemoclaw.json` — wrapper configuration
+- `nemoclawd.json` — wrapper configuration
 - `.openclaw/` — OpenClaw gateway config, conversation history, context
-- `.nemoclaw/wallets/` — wallet data (encrypted)
-- `.nemoclaw/vault/` — append-only JSONL trade and heartbeat logs
+- `.nemoclawd/wallets/` — wallet data (encrypted)
+- `.nemoclawd/vault/` — append-only JSONL trade and heartbeat logs
 
 Default volume size is 1 GB. To extend:
 
@@ -162,7 +162,7 @@ fly apps restart your-app-name
 **Need to start fresh** — use the "Reset" button in the setup wizard, or:
 ```bash
 fly ssh console -a your-app-name
-rm /data/nemoclaw.json
+rm /data/nemoclawd.json
 exit
 fly apps restart your-app-name
 ```

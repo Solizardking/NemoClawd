@@ -1,0 +1,74 @@
+version: "0.1.0"
+min_clawd_box_version: "0.1.0"
+min_nemoclawd_version: "2026.3.0"
+digest: ""  # Computed at release time
+
+profiles:
+  - default
+  - ncp
+  - nim-local
+  - vllm
+  - clawd-router
+
+description: |
+  NemoClawd blueprint: orchestrates Clawd Box sandbox creation, migration,
+  and NIM/vLLM/ClawdRouter inference routing inside the Clawd Box sandbox runtime.
+
+components:
+  sandbox:
+    image: "ghcr.io/8bitlabs/clawd-box/sandboxes/clawd:latest"
+    name: "clawd-box"
+    forward_ports:
+      - 18789
+
+  inference:
+    profiles:
+      default:
+        provider_type: "nvidia"
+        provider_name: "nvidia-inference"
+        endpoint: "https://integrate.api.nvidia.com/v1"
+        model: "nvidia/nemotron-3-super-120b-a12b"
+
+      ncp:
+        provider_type: "nvidia"
+        provider_name: "nvidia-ncp"
+        endpoint: ""
+        model: "nvidia/nemotron-3-super-120b-a12b"
+        credential_env: "NVIDIA_API_KEY"
+        dynamic_endpoint: true
+
+      nim-local:
+        provider_type: "openai"
+        provider_name: "nim-local"
+        endpoint: "http://nim-service.local:8000/v1"
+        model: "nvidia/nemotron-3-super-120b-a12b"
+        credential_env: "NIM_API_KEY"
+
+      vllm:
+        provider_type: "openai"
+        provider_name: "vllm-local"
+        endpoint: "http://localhost:8000/v1"
+        model: "nvidia/nemotron-3-nano-30b-a3b"
+        credential_env: "OPENAI_API_KEY"
+        credential_default: "dummy"
+
+      # ── ClawdRouter free tier ─────────────────────────────────────────────
+      # Uses the Clawd Box router for free LLM inference (79+ models).
+      # Requires CLAWD_ROUTER_KEY or the clawd_free_* bypass for provisioned agents.
+      clawd-router:
+        provider_type: "openai"
+        provider_name: "clawd-router"
+        endpoint: "https://clawd-box-router.fly.dev/v1"
+        model: "solana-clawd-1.5b"
+        credential_env: "CLAWD_ROUTER_KEY"
+        credential_default: "clawd_free_anonymous"
+
+  policy:
+    base: "policies/clawd-box-sandbox.yaml"
+    additions:
+      nim_service:
+        name: nim_service
+        endpoints:
+          - host: "nim-service.local"
+            port: 8000
+            protocol: rest

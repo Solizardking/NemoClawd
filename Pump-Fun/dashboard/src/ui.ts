@@ -1,5 +1,5 @@
 /**
- * NemoClaw Operations Dashboard — Server-rendered SPA
+ * NemoClawd Operations Dashboard — Server-rendered SPA
  *
  * Full operations dashboard with:
  * - System overview (wallet, RPC, model, sandbox)
@@ -22,7 +22,7 @@ export function renderDashboard(config: DashboardConfig): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NemoClaw Dashboard</title>
+<title>NemoClawd Dashboard</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{

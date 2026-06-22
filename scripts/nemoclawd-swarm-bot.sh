@@ -1,22 +1,27 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
 # Run the bundled Pump-Fun swarm dashboard inside the sandbox.
 
 set -euo pipefail
 
 APP_DIR="/opt/pump-fun/swarm-bot"
 PUMPFUN_ROOT="/opt/pump-fun"
-WORKSPACE_ROOT="${HOME:-/sandbox}/.clawd/workspace"
+WORKSPACE_ROOT="${HOME:-/sandbox}/.openclaw/workspace"
 
 prepare_workspace() {
   mkdir -p "${WORKSPACE_ROOT}/pumpfun"
-  ln -snf "${PUMPFUN_ROOT}/swarm-bot"        "${WORKSPACE_ROOT}/pumpfun/swarm-bot"
-  ln -snf "${PUMPFUN_ROOT}/telegram-bot"     "${WORKSPACE_ROOT}/pumpfun/telegram-bot"
+  ln -snf "${PUMPFUN_ROOT}/swarm-bot" "${WORKSPACE_ROOT}/pumpfun/swarm-bot"
+  ln -snf "${PUMPFUN_ROOT}/telegram-bot" "${WORKSPACE_ROOT}/pumpfun/telegram-bot"
   ln -snf "${PUMPFUN_ROOT}/websocket-server" "${WORKSPACE_ROOT}/pumpfun/websocket-server"
 }
 
 derive_ws_url() {
   python3 - <<'PYURL'
-import os; from urllib.parse import urlparse, urlunparse
+import os
+from urllib.parse import urlparse, urlunparse
+
 rpc = os.environ["SOLANA_RPC_URL"]
 parsed = urlparse(rpc)
 scheme = "wss" if parsed.scheme == "https" else "ws"
@@ -39,5 +44,8 @@ prepare_workspace
 
 cd "${APP_DIR}"
 echo "[swarm-bot] Starting Pump-Fun swarm dashboard"
-echo "[swarm-bot] RPC: ${SOLANA_RPC_URL} | Port: ${PORT} | DB: ${DB_PATH}"
+echo "[swarm-bot] RPC: ${SOLANA_RPC_URL}"
+echo "[swarm-bot] WS: ${SOLANA_WS_URL}"
+echo "[swarm-bot] Port: ${PORT}"
+echo "[swarm-bot] DB: ${DB_PATH}"
 exec npx tsx src/index.ts

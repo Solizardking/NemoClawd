@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 [project]
-name = "nemoclaw-docs"
+name = "nemoclawd-docs"
 version = "0.1.0"
-description = "Documentation build for NemoClaw"
+description = "Documentation build for NemoClawd"
 requires-python = ">=3.11"
 
 [dependency-groups]

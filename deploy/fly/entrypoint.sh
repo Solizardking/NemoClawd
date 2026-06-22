@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
-# NemoClaw Fly.io entrypoint — boots the wrapper server which manages
+# NemoClawd Fly.io entrypoint — boots the wrapper server which manages
 # the OpenClaw gateway, setup wizard, and reverse proxy.
 
 set -euo pipefail
@@ -9,15 +9,15 @@ DATA_DIR="${DATA_DIR:-/data}"
 export DATA_DIR
 
 echo "============================================"
-echo "  NemoClaw on Fly.io"
+echo "  NemoClawd on Fly.io"
 echo "============================================"
 
 # Ensure data directory structure
 mkdir -p "${DATA_DIR}/.openclaw/agents/main/agent" \
          "${DATA_DIR}/.openclaw/workspace/skills" \
-         "${DATA_DIR}/.nemoclaw/wallets" \
-         "${DATA_DIR}/.nemoclaw/vault"
-chmod 700 "${DATA_DIR}/.nemoclaw/wallets" 2>/dev/null || true
+         "${DATA_DIR}/.nemoclawd/wallets" \
+         "${DATA_DIR}/.nemoclawd/vault"
+chmod 700 "${DATA_DIR}/.nemoclawd/wallets" 2>/dev/null || true
 
 # If the OpenClaw config doesn't exist yet, write a sensible default
 if [ ! -f "${DATA_DIR}/.openclaw/openclaw.json" ]; then
@@ -43,26 +43,26 @@ os.chmod(path, 0o600)
 "
 fi
 
-# Pre-install NemoClaw plugin if not already present
+# Pre-install NemoClawd plugin if not already present
 if command -v openclaw &>/dev/null; then
   HOME="${DATA_DIR}" openclaw doctor --fix > /dev/null 2>&1 || true
-  HOME="${DATA_DIR}" openclaw plugins install /opt/nemoclaw > /dev/null 2>&1 || true
+  HOME="${DATA_DIR}" openclaw plugins install /opt/nemoclawd > /dev/null 2>&1 || true
 fi
 
 # ── Apply secrets from Fly into wrapper config ──────────────────
-# If nemoclaw.json doesn't exist but Fly secrets do, seed the config
-if [ ! -f "${DATA_DIR}/nemoclaw.json" ]; then
+# If nemoclawd.json doesn't exist but Fly secrets do, seed the config
+if [ ! -f "${DATA_DIR}/nemoclawd.json" ]; then
   PROVIDER=""
   API_KEY=""
 
-  case "${NEMOCLAW_AUTH_CHOICE:-}" in
-    anthropic) PROVIDER="anthropic"; API_KEY="${NEMOCLAW_API_KEY:-}" ;;
-    openai)    PROVIDER="openai";    API_KEY="${NEMOCLAW_API_KEY:-}" ;;
-    nvidia)    PROVIDER="nvidia";    API_KEY="${NEMOCLAW_API_KEY:-}" ;;
-    gemini)    PROVIDER="gemini";    API_KEY="${NEMOCLAW_API_KEY:-}" ;;
-    openrouter) PROVIDER="openrouter"; API_KEY="${NEMOCLAW_API_KEY:-}" ;;
-    moonshot)  PROVIDER="moonshot";  API_KEY="${NEMOCLAW_API_KEY:-}" ;;
-    minimax)   PROVIDER="minimax";   API_KEY="${NEMOCLAW_API_KEY:-}" ;;
+  case "${NEMOCLAWD_AUTH_CHOICE:-}" in
+    anthropic) PROVIDER="anthropic"; API_KEY="${NEMOCLAWD_API_KEY:-}" ;;
+    openai)    PROVIDER="openai";    API_KEY="${NEMOCLAWD_API_KEY:-}" ;;
+    nvidia)    PROVIDER="nvidia";    API_KEY="${NEMOCLAWD_API_KEY:-}" ;;
+    gemini)    PROVIDER="gemini";    API_KEY="${NEMOCLAWD_API_KEY:-}" ;;
+    openrouter) PROVIDER="openrouter"; API_KEY="${NEMOCLAWD_API_KEY:-}" ;;
+    moonshot)  PROVIDER="moonshot";  API_KEY="${NEMOCLAWD_API_KEY:-}" ;;
+    minimax)   PROVIDER="minimax";   API_KEY="${NEMOCLAWD_API_KEY:-}" ;;
   esac
 
   if [ -n "${PROVIDER}" ] && [ -n "${API_KEY}" ]; then
@@ -71,11 +71,11 @@ if [ ! -f "${DATA_DIR}/nemoclaw.json" ]; then
 import json, os
 cfg = {
   'provider': '${PROVIDER}',
-  'apiKey': os.environ.get('NEMOCLAW_API_KEY', ''),
-  'telegramToken': os.environ.get('NEMOCLAW_TELEGRAM_TOKEN', ''),
-  'discordToken': os.environ.get('NEMOCLAW_DISCORD_TOKEN', ''),
-  'slackBotToken': os.environ.get('NEMOCLAW_SLACK_BOT_TOKEN', ''),
-  'slackAppToken': os.environ.get('NEMOCLAW_SLACK_APP_TOKEN', ''),
+  'apiKey': os.environ.get('NEMOCLAWD_API_KEY', ''),
+  'telegramToken': os.environ.get('NEMOCLAWD_TELEGRAM_TOKEN', ''),
+  'discordToken': os.environ.get('NEMOCLAWD_DISCORD_TOKEN', ''),
+  'slackBotToken': os.environ.get('NEMOCLAWD_SLACK_BOT_TOKEN', ''),
+  'slackAppToken': os.environ.get('NEMOCLAWD_SLACK_APP_TOKEN', ''),
   'solanaRpcUrl': os.environ.get('SOLANA_RPC_URL', ''),
   'privyAppId': os.environ.get('PRIVY_APP_ID', ''),
   'privyAppSecret': os.environ.get('PRIVY_APP_SECRET', ''),
@@ -83,7 +83,7 @@ cfg = {
 }
 # Remove empty values
 cfg = {k: v for k, v in cfg.items() if v}
-path = '${DATA_DIR}/nemoclaw.json'
+path = '${DATA_DIR}/nemoclawd.json'
 json.dump(cfg, open(path, 'w'), indent=2)
 os.chmod(path, 0o600)
 "

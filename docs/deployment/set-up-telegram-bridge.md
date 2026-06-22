@@ -1,11 +1,11 @@
 ---
 title:
-  page: "Set Up the NemoClaw Telegram Bridge for Remote Agent Chat"
+  page: "Set Up the NemoClawd Telegram Bridge for Remote Agent Chat"
   nav: "Set Up Telegram Bridge"
 description: "Forward messages between Telegram and the sandboxed OpenClaw agent."
-keywords: ["nemoclaw telegram bridge", "telegram bot openclaw agent"]
+keywords: ["nemoclawd telegram bridge", "telegram bot openclaw agent"]
 topics: ["generative_ai", "ai_agents"]
-tags: ["openclaw", "openshell", "telegram", "deployment", "nemoclaw"]
+tags: ["openclaw", "openshell", "telegram", "deployment", "nemoclawd"]
 content:
   type: how_to
   difficulty: intermediate
@@ -21,11 +21,11 @@ status: published
 # Set Up the Telegram Bridge
 
 Forward messages between a Telegram bot and the OpenClaw agent running inside the sandbox.
-The Telegram bridge is an auxiliary service managed by `nemoclaw start`.
+The Telegram bridge is an auxiliary service managed by `nemoclawd start`.
 
 ## Prerequisites
 
-- A running NemoClaw sandbox, either local or remote.
+- A running NemoClawd sandbox, either local or remote.
 - A Telegram bot token from [BotFather](https://t.me/BotFather).
 
 ## Create a Telegram Bot
@@ -46,7 +46,7 @@ $ export TELEGRAM_BOT_TOKEN=<your-bot-token>
 Start the Telegram bridge and other auxiliary services:
 
 ```console
-$ nemoclaw start
+$ nemoclawd start
 ```
 
 The `start` command launches the following services:
@@ -61,7 +61,7 @@ The Telegram bridge starts only when the `TELEGRAM_BOT_TOKEN` environment variab
 Check that the Telegram bridge is running:
 
 ```console
-$ nemoclaw status
+$ nemoclawd status
 ```
 
 The output shows the status of all auxiliary services.
@@ -77,7 +77,7 @@ To restrict which Telegram chats can interact with the agent, set the `ALLOWED_C
 
 ```console
 $ export ALLOWED_CHAT_IDS="123456789,987654321"
-$ nemoclaw start
+$ nemoclawd start
 ```
 
 ## Stop the Services
@@ -85,10 +85,10 @@ $ nemoclaw start
 To stop the Telegram bridge and all other auxiliary services:
 
 ```console
-$ nemoclaw stop
+$ nemoclawd stop
 ```
 
 ## Related Topics
 
-- [Deploy NemoClaw to a Remote GPU Instance](deploy-to-remote-gpu.md) for remote deployment with Telegram support.
+- [Deploy NemoClawd to a Remote GPU Instance](deploy-to-remote-gpu.md) for remote deployment with Telegram support.
 - [Commands](../reference/commands.md) for the full `start` and `stop` command reference.

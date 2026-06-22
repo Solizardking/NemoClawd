@@ -16,7 +16,7 @@ function writeExecutable(target, contents) {
 
 describe("installer runtime preflight", () => {
   it("fails fast with a clear message on unsupported Node.js and npm", () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-install-preflight-"));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclawd-install-preflight-"));
     const fakeBin = path.join(tmp, "bin");
     fs.mkdirSync(fakeBin);
 

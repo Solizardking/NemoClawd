@@ -7,7 +7,7 @@ const readline = require("readline");
 const { Writable } = require("stream");
 const { execSync } = require("child_process");
 
-const CREDS_DIR = path.join(process.env.HOME || "/tmp", ".nemoclaw");
+const CREDS_DIR = path.join(process.env.HOME || "/tmp", ".nemoclawd");
 const CREDS_FILE = path.join(CREDS_DIR, "credentials.json");
 
 function loadCredentials() {
@@ -95,7 +95,7 @@ async function ensureApiKey() {
   saveCredential("NVIDIA_API_KEY", key);
   process.env.NVIDIA_API_KEY = key;
   console.log("");
-  console.log("  Key saved to ~/.nemoclaw/credentials.json (mode 600)");
+  console.log("  Key saved to ~/.nemoclawd/credentials.json (mode 600)");
   console.log("");
 }
 
@@ -142,7 +142,7 @@ async function ensureGithubToken() {
   saveCredential("GITHUB_TOKEN", token);
   process.env.GITHUB_TOKEN = token;
   console.log("");
-  console.log("  Token saved to ~/.nemoclaw/credentials.json (mode 600)");
+  console.log("  Token saved to ~/.nemoclawd/credentials.json (mode 600)");
   console.log("");
 }
 

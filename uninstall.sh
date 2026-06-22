@@ -2,13 +2,13 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-# NemoClaw uninstaller.
+# NemoClawd uninstaller.
 # Removes the host-side resources created by the installer/setup flow:
-#   - NemoClaw helper services
-#   - All OpenShell sandboxes plus the NemoClaw gateway/providers
-#   - NemoClaw/OpenShell/OpenClaw Docker images built or pulled for the sandbox flow
-#   - ~/.nemoclaw plus ~/.config/{openshell,nemoclaw} state
-#   - Global nemoclaw npm install/link
+#   - NemoClawd helper services
+#   - All OpenShell sandboxes plus the NemoClawd gateway/providers
+#   - NemoClawd/OpenShell/OpenClaw Docker images built or pulled for the sandbox flow
+#   - ~/.nemoclawd plus ~/.config/{openshell,nemoclawd} state
+#   - Global nemoclawd npm install/link
 #   - OpenShell binary if it was installed to the standard installer path
 #
 # Preserves shared system tooling such as Docker, Node.js, npm, and Ollama by default.
@@ -25,10 +25,10 @@ warn() { echo -e "${YELLOW}[uninstall]${NC} $1"; }
 fail() { echo -e "${RED}[uninstall]${NC} $1"; exit 1; }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-NEMOCLAW_STATE_DIR="${HOME}/.nemoclaw"
+NEMOCLAWD_STATE_DIR="${HOME}/.nemoclawd"
 OPENSHELL_CONFIG_DIR="${HOME}/.config/openshell"
-NEMOCLAW_CONFIG_DIR="${HOME}/.config/nemoclaw"
-DEFAULT_GATEWAY="nemoclaw"
+NEMOCLAWD_CONFIG_DIR="${HOME}/.config/nemoclawd"
+DEFAULT_GATEWAY="nemoclawd"
 PROVIDERS=("nvidia-nim" "vllm-local" "ollama-local" "nvidia-ncp" "nim-local")
 OPEN_SHELL_INSTALL_PATHS=("/usr/local/bin/openshell")
 OLLAMA_MODELS=("nemotron-3-super:120b" "nemotron-3-nano:30b")
@@ -45,7 +45,7 @@ Usage: ./uninstall.sh [--yes] [--keep-openshell] [--delete-models]
 Options:
   --yes             Skip the confirmation prompt
   --keep-openshell  Leave the openshell binary installed
-  --delete-models   Remove NemoClaw-pulled Ollama models
+  --delete-models   Remove NemoClawd-pulled Ollama models
   -h, --help        Show this help
 EOF
 }
@@ -80,9 +80,9 @@ confirm() {
   fi
 
   echo ""
-  warn "This will remove all OpenShell sandboxes, NemoClaw-managed gateway/providers,"
-  warn "related Docker images, and local state under ~/.nemoclaw, ~/.config/openshell,"
-  warn "and ~/.config/nemoclaw."
+  warn "This will remove all OpenShell sandboxes, NemoClawd-managed gateway/providers,"
+  warn "related Docker images, and local state under ~/.nemoclawd, ~/.config/openshell,"
+  warn "and ~/.config/nemoclawd."
   warn "It will not uninstall Docker, Ollama, npm, Node.js, or other shared tooling."
   if [ "$DELETE_MODELS" = false ]; then
     warn "Ollama models are preserved by default. Re-run with --delete-models to remove them."
@@ -139,10 +139,10 @@ remove_file_with_optional_sudo() {
 
 stop_helper_services() {
   if [ -x "$SCRIPT_DIR/scripts/start-services.sh" ]; then
-    run_optional "Stopped NemoClaw helper services" "$SCRIPT_DIR/scripts/start-services.sh" --stop
+    run_optional "Stopped NemoClawd helper services" "$SCRIPT_DIR/scripts/start-services.sh" --stop
   fi
 
-  remove_glob_paths "${TMP_ROOT}/nemoclaw-services-*"
+  remove_glob_paths "${TMP_ROOT}/nemoclawd-services-*"
 }
 
 stop_openshell_forward_processes() {
@@ -187,23 +187,23 @@ remove_openshell_resources() {
   run_optional "Destroyed gateway '${DEFAULT_GATEWAY}'" openshell gateway destroy -g "$DEFAULT_GATEWAY"
 }
 
-remove_nemoclaw_cli() {
+remove_nemoclawd_cli() {
   if command -v npm > /dev/null 2>&1; then
-    npm unlink -g nemoclaw > /dev/null 2>&1 || true
-    if npm uninstall -g nemoclaw > /dev/null 2>&1; then
-      info "Removed global nemoclaw npm package"
+    npm unlink -g nemoclawd > /dev/null 2>&1 || true
+    if npm uninstall -g nemoclawd > /dev/null 2>&1; then
+      info "Removed global nemoclawd npm package"
     else
-      warn "Global nemoclaw npm package not found or already removed"
+      warn "Global nemoclawd npm package not found or already removed"
     fi
   else
-    warn "npm not found; skipping nemoclaw npm uninstall."
+    warn "npm not found; skipping nemoclawd npm uninstall."
   fi
 }
 
-remove_nemoclaw_state() {
-  remove_path "$NEMOCLAW_STATE_DIR"
+remove_nemoclawd_state() {
+  remove_path "$NEMOCLAWD_STATE_DIR"
   remove_path "$OPENSHELL_CONFIG_DIR"
-  remove_path "$NEMOCLAW_CONFIG_DIR"
+  remove_path "$NEMOCLAWD_CONFIG_DIR"
 }
 
 remove_related_docker_containers() {
@@ -228,7 +228,7 @@ remove_related_docker_containers() {
           BEGIN { IGNORECASE=1 }
           {
             ref=$0
-            if (ref ~ /openshell-cluster/ || ref ~ /openshell/ || ref ~ /openclaw/ || ref ~ /nemoclaw/) {
+            if (ref ~ /openshell-cluster/ || ref ~ /openshell/ || ref ~ /openclaw/ || ref ~ /nemoclawd/) {
               print $1
             }
           }
@@ -237,7 +237,7 @@ remove_related_docker_containers() {
   )
 
   if [ "${#container_ids[@]}" -eq 0 ]; then
-    info "No NemoClaw/OpenShell Docker containers found"
+    info "No NemoClawd/OpenShell Docker containers found"
     return 0
   fi
 
@@ -279,7 +279,7 @@ remove_related_docker_images() {
           BEGIN { IGNORECASE=1 }
           {
             ref=$0
-            if (ref ~ /openshell/ || ref ~ /openclaw/ || ref ~ /nemoclaw/) {
+            if (ref ~ /openshell/ || ref ~ /openclaw/ || ref ~ /nemoclawd/) {
               print $1
             }
           }
@@ -288,7 +288,7 @@ remove_related_docker_images() {
   )
 
   if [ "${#image_ids[@]}" -eq 0 ]; then
-    info "No NemoClaw/OpenShell Docker images found"
+    info "No NemoClawd/OpenShell Docker images found"
     return 0
   fi
 
@@ -330,8 +330,8 @@ remove_optional_ollama_models() {
 }
 
 remove_runtime_temp_artifacts() {
-  remove_glob_paths "${TMP_ROOT}/nemoclaw-create-*.log"
-  remove_glob_paths "${TMP_ROOT}/nemoclaw-tg-ssh-*.conf"
+  remove_glob_paths "${TMP_ROOT}/nemoclawd-create-*.log"
+  remove_glob_paths "${TMP_ROOT}/nemoclawd-tg-ssh-*.conf"
 }
 
 remove_openshell_binary() {
@@ -363,20 +363,20 @@ remove_openshell_binary() {
 main() {
   confirm
 
-  info "Stopping NemoClaw helper services..."
+  info "Stopping NemoClawd helper services..."
   stop_helper_services
 
   info "Stopping local OpenShell forward processes..."
   stop_openshell_forward_processes
 
-  info "Removing OpenShell resources created for NemoClaw..."
+  info "Removing OpenShell resources created for NemoClawd..."
   remove_openshell_resources
 
-  info "Removing global nemoclaw install..."
-  remove_nemoclaw_cli
+  info "Removing global nemoclawd install..."
+  remove_nemoclawd_cli
 
-  info "Removing NemoClaw state..."
-  remove_nemoclaw_state
+  info "Removing NemoClawd state..."
+  remove_nemoclawd_state
 
   info "Removing related Docker containers..."
   remove_related_docker_containers

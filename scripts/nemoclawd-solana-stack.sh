@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
 # Start the Solana operator stack inside the sandbox in one shot.
-# Launches the Telegram bot, Solana bridge, and WebSocket relay as background services.
+# This launches the Telegram bot, natural-language wallet bridge,
+# and realtime websocket relay as background services.
 
 set -euo pipefail
 
-SERVICES_DIR="${HOME:-/sandbox}/.clawd-box/services"
+SERVICES_DIR="${HOME:-/sandbox}/.nemoclawd/services"
 LOG_DIR="${SERVICES_DIR}/logs"
 PID_DIR="${SERVICES_DIR}/pids"
-VAULT_DIR="${CLAWD_BOX_VAULT_DIR:-${HOME:-/sandbox}/.clawd-box/vault}"
+VAULT_DIR="${NEMOCLAWD_VAULT_DIR:-${HOME:-/sandbox}/.nemoclawd/vault}"
 STACK_DAY="$(date -u +%F)"
 STACK_LOG="${VAULT_DIR}/stack-${STACK_DAY}.log"
 
@@ -63,6 +67,7 @@ start_service() {
   local pid=$!
   echo "${pid}" > "${pid_file}"
   echo "[solana-stack] ${name} started (pid ${pid})"
+  echo "[solana-stack] log: ${log_file}"
   append_stack_log "service=${name} pid=${pid} log=${log_file} status=started"
 }
 
@@ -73,23 +78,43 @@ fi
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "[solana-stack] NemoClawd Solana One-Shot Startup"
 echo "[solana-stack] RPC: ${SOLANA_RPC_URL:-https://rpc.solanatracker.io/public}"
+echo "[solana-stack] WS:  ${SOLANA_WS_URL:-auto}"
 echo "[solana-stack] Wallet: ${DEVELOPER_WALLET:-not-configured}"
 echo "[solana-stack] Mint: ${AGENT_TOKEN_MINT_ADDRESS:-not-configured}"
 echo "[solana-stack] Vault: ${VAULT_DIR}"
 echo "[solana-stack] Heartbeat: ${HEARTBEAT_SECONDS}s"
 if [ -n "${HELIUS_API_KEY:-}" ]; then
   echo "[solana-stack] Helius: configured"
+else
+  echo "[solana-stack] Helius: not-configured"
 fi
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-append_stack_log "stack_started rpc=${SOLANA_RPC_URL:-https://rpc.solanatracker.io/public} wallet=${DEVELOPER_WALLET:-not-configured} mint=${AGENT_TOKEN_MINT_ADDRESS:-not-configured} vault=${VAULT_DIR} heartbeat=${HEARTBEAT_SECONDS}s"
+append_stack_log "stack_started rpc=${SOLANA_RPC_URL:-https://rpc.solanatracker.io/public} wallet=${DEVELOPER_WALLET:-not-configured} mint=${AGENT_TOKEN_MINT_ADDRESS:-not-configured} vault=${VAULT_DIR} heartbeat=${HEARTBEAT_SECONDS}s min_wallet_sol=${MIN_WALLET_SOL} stop_balance_sol=${STOP_BALANCE_SOL}"
 
-[ "${START_TELEGRAM_BOT}"     = "true" ] && start_service "telegram-bot"     "nemoclawd-telegram-bot"
-[ "${START_SOLANA_BRIDGE}"    = "true" ] && start_service "solana-bridge"     "nemoclawd-solana-bridge"
-[ "${START_WEBSOCKET_SERVER}" = "true" ] && start_service "websocket-server"  "nemoclawd-websocket-server"
-[ "${START_PAYMENT_APP}"      = "true" ] && start_service "payment-app"       "nemoclawd-payment-app"
-[ "${START_SWARM_BOT}"        = "true" ] && start_service "swarm-bot"         "nemoclawd-swarm-bot"
-[ "${START_AGENT_REGISTRY}"   = "true" ] && start_service "agent-registry"    "nemoclawd-agent-registry"
+if [ "${START_TELEGRAM_BOT}" = "true" ]; then
+  start_service "telegram-bot" "nemoclawd-telegram-bot"
+fi
+
+if [ "${START_SOLANA_BRIDGE}" = "true" ]; then
+  start_service "solana-bridge" "nemoclawd-solana-bridge"
+fi
+
+if [ "${START_WEBSOCKET_SERVER}" = "true" ]; then
+  start_service "websocket-server" "nemoclawd-websocket-server"
+fi
+
+if [ "${START_PAYMENT_APP}" = "true" ]; then
+  start_service "payment-app" "nemoclawd-payment-app"
+fi
+
+if [ "${START_SWARM_BOT}" = "true" ]; then
+  start_service "swarm-bot" "nemoclawd-swarm-bot"
+fi
+
+if [ "${START_AGENT_REGISTRY}" = "true" ]; then
+  start_service "agent-registry" "nemoclawd-agent-registry"
+fi
 
 echo ""
 echo "[solana-stack] Active services:"

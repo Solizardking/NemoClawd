@@ -25,7 +25,7 @@ primary_region = "REGION_PLACEHOLDER"
   memory = "4gb"
 
 [mounts]
-  source = "nemoclaw_data"
+  source = "nemoclawd_data"
   destination = "/data"
 
 [checks]

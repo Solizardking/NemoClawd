@@ -1,12 +1,12 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 //
-// Multi-sandbox registry at ~/.nemoclaw/sandboxes.json
+// Multi-sandbox registry at ~/.nemoclawd/sandboxes.json
 
 const fs = require("fs");
 const path = require("path");
 
-const REGISTRY_FILE = path.join(process.env.HOME || "/tmp", ".nemoclaw", "sandboxes.json");
+const REGISTRY_FILE = path.join(process.env.HOME || "/tmp", ".nemoclawd", "sandboxes.json");
 const OPENSHELL_CONFIG_DIR = path.join(process.env.HOME || "/tmp", ".config", "openshell");
 
 function readTextFile(filePath) {

@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-# NemoClaw walkthrough — sandboxed agent approval flow.
+# NemoClawd walkthrough — sandboxed agent approval flow.
 #
 # This sets up a split-screen workflow:
 #   LEFT:  OpenClaw agent (chat)
@@ -13,7 +13,7 @@
 # the TUI prompts the operator to approve or deny the request.
 #
 # Prerequisites:
-#   - NemoClaw setup complete (./scripts/setup.sh)
+#   - NemoClawd setup complete (./scripts/setup.sh)
 #   - NVIDIA_API_KEY in environment
 #
 # Suggested prompts that trigger the approval flow:
@@ -36,9 +36,9 @@
 #     openshell term
 #
 #   Terminal 2 (Agent):
-#     openshell sandbox connect nemoclaw
+#     openshell sandbox connect nemoclawd
 #     export NVIDIA_API_KEY=nvapi-...
-#     nemoclaw-start
+#     nemoclawd-start
 #     openclaw agent --agent main --local --session-id live
 
 set -euo pipefail
@@ -47,7 +47,7 @@ set -euo pipefail
 
 echo ""
 echo "  ┌─────────────────────────────────────────────────────┐"
-echo "  │  NemoClaw Walkthrough                               │"
+echo "  │  NemoClawd Walkthrough                               │"
 echo "  │                                                     │"
 echo "  │  LEFT pane:   OpenShell TUI (monitor + approve)     │"
 echo "  │  RIGHT pane:  OpenClaw agent (chat)                 │"
@@ -68,14 +68,14 @@ if ! command -v tmux > /dev/null 2>&1; then
   echo "    openshell term"
   echo ""
   echo "  Terminal 2 (Agent):"
-  echo "    openshell sandbox connect nemoclaw"
+  echo "    openshell sandbox connect nemoclawd"
   echo "    export NVIDIA_API_KEY=$NVIDIA_API_KEY"
-  echo "    nemoclaw-start"
+  echo "    nemoclawd-start"
   echo "    openclaw agent --agent main --local --session-id live"
   exit 0
 fi
 
-SESSION="nemoclaw-walkthrough"
+SESSION="nemoclawd-walkthrough"
 
 # Kill old session if it exists
 tmux kill-session -t "$SESSION" 2>/dev/null || true
@@ -85,7 +85,7 @@ tmux new-session -d -s "$SESSION" -x 200 -y 50 "openshell term"
 
 # Split right pane for the agent
 tmux split-window -h -t "$SESSION" \
-  "openshell sandbox connect nemoclaw -- bash -c 'export NVIDIA_API_KEY=$NVIDIA_API_KEY && nemoclaw-start openclaw agent --agent main --local --session-id live'"
+  "openshell sandbox connect nemoclawd -- bash -c 'export NVIDIA_API_KEY=$NVIDIA_API_KEY && nemoclawd-start openclaw agent --agent main --local --session-id live'"
 
 # Even split
 tmux select-layout -t "$SESSION" even-horizontal

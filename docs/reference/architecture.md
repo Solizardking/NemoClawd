@@ -1,9 +1,9 @@
 ---
 title:
-  page: "NemoClaw Architecture — Plugin, Blueprint, and Sandbox Structure"
+  page: "NemoClawd Architecture — Plugin, Blueprint, and Sandbox Structure"
   nav: "Architecture"
 description: "Plugin structure, blueprint lifecycle, sandbox environment, and inference routing."
-keywords: ["nemoclaw architecture", "nemoclaw plugin blueprint structure"]
+keywords: ["nemoclawd architecture", "nemoclawd plugin blueprint structure"]
 topics: ["generative_ai", "ai_agents"]
 tags: ["openclaw", "openshell", "sandboxing", "blueprints", "inference_routing"]
 content:
@@ -20,15 +20,15 @@ status: published
 
 # Architecture
 
-NemoClaw has two main components: a TypeScript plugin that integrates with the OpenClaw CLI, and a Python blueprint that orchestrates OpenShell resources.
+NemoClawd has two main components: a TypeScript plugin that integrates with the OpenClaw CLI, and a Python blueprint that orchestrates OpenShell resources.
 
-## NemoClaw Plugin
+## NemoClawd Plugin
 
-The plugin is a thin TypeScript package that registers commands under `openclaw nemoclaw`.
+The plugin is a thin TypeScript package that registers commands under `openclaw nemoclawd`.
 It runs in-process with the OpenClaw gateway and handles user-facing CLI interactions.
 
 ```text
-nemoclaw/
+nemoclawd/
 ├── src/
 │   ├── index.ts                    Plugin entry — registers all commands
 │   ├── cli.ts                      Commander.js subcommand wiring
@@ -37,7 +37,7 @@ nemoclaw/
 │   │   ├── connect.ts              Interactive shell into sandbox
 │   │   ├── status.ts               Blueprint run state + sandbox health
 │   │   ├── logs.ts                 Stream blueprint and sandbox logs
-│   │   └── slash.ts                /nemoclaw chat command handler
+│   │   └── slash.ts                /nemoclawd chat command handler
 │   └── blueprint/
 │       ├── resolve.ts              Version resolution, cache management
 │       ├── fetch.ts                Download blueprint from OCI registry
@@ -48,14 +48,14 @@ nemoclaw/
 └── package.json                    Commands declared under openclaw.extensions
 ```
 
-## NemoClaw Blueprint
+## NemoClawd Blueprint
 
 The blueprint is a versioned Python artifact with its own release stream.
 The plugin resolves, verifies, and executes the blueprint as a subprocess.
 The blueprint drives all interactions with the OpenShell CLI.
 
 ```text
-nemoclaw-blueprint/
+nemoclawd-blueprint/
 ├── blueprint.yaml                  Manifest — version, profiles, compatibility
 ├── orchestrator/
 │   └── runner.py                   CLI runner — plan / apply / status
@@ -85,7 +85,7 @@ The sandbox runs the
 [`ghcr.io/nvidia/openshell-community/sandboxes/openclaw`](https://github.com/NVIDIA/OpenShell-Community)
 container image. Inside the sandbox:
 
-- OpenClaw runs with the NemoClaw plugin pre-installed.
+- OpenClaw runs with the NemoClawd plugin pre-installed.
 - Inference calls are routed through OpenShell to the configured provider.
 - Network egress is restricted by the baseline policy in `openclaw-sandbox.yaml`.
 - Filesystem access is confined to `/sandbox` and `/tmp` for read-write access, with system paths read-only.

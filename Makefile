@@ -6,18 +6,18 @@ check: lint-ts lint-py
 lint: lint-ts lint-py
 
 lint-ts:
-	cd nemoclaw && npm run check
+	cd nemoclawd && npm run check
 
 lint-py:
-	cd nemoclaw-blueprint && $(MAKE) check
+	cd nemoclawd-blueprint && $(MAKE) check
 
 format: format-ts format-py
 
 format-ts:
-	cd nemoclaw && npm run lint:fix && npm run format
+	cd nemoclawd && npm run lint:fix && npm run format
 
 format-py:
-	cd nemoclaw-blueprint && $(MAKE) format
+	cd nemoclawd-blueprint && $(MAKE) format
 
 # --- Documentation ---
 

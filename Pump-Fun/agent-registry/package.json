@@ -1,7 +1,7 @@
 {
-  "name": "@nemoclaw/agent-registry",
+  "name": "@nemoclawd/agent-registry",
   "version": "1.0.0",
-  "description": "NemoClaw agent registration + heartbeat for 8004 Solana Agent Registry and Pump.fun",
+  "description": "NemoClawd agent registration + heartbeat for 8004 Solana Agent Registry and Pump.fun",
   "type": "module",
   "private": true,
   "engines": {

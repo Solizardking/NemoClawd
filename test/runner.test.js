@@ -19,7 +19,7 @@ function makeExecutable(filePath) {
 
 describe("findBinaryOnPath", () => {
   it("finds an executable in PATH", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-runner-path-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclawd-runner-path-"));
     const dockerPath = path.join(dir, "docker");
     makeExecutable(dockerPath);
 
@@ -29,7 +29,7 @@ describe("findBinaryOnPath", () => {
 
 describe("ensureDockerCliOnPath", () => {
   it("prepends a discovered Docker CLI directory when PATH is missing docker", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-runner-docker-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclawd-runner-docker-"));
     const dockerPath = path.join(dir, "docker");
     const env = { PATH: "/usr/bin", HOME: dir };
     makeExecutable(dockerPath);
@@ -46,7 +46,7 @@ describe("ensureDockerCliOnPath", () => {
 
 describe("resolveColimaDockerHost", () => {
   it("ignores stale Colima sockets that fail probing", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-runner-colima-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclawd-runner-colima-"));
     const sock = path.join(dir, "docker.sock");
     fs.writeFileSync(sock, "");
 
@@ -60,7 +60,7 @@ describe("resolveColimaDockerHost", () => {
   });
 
   it("uses a Colima socket only when probing succeeds", () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-runner-colima-"));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclawd-runner-colima-"));
     const sock = path.join(dir, "docker.sock");
     fs.writeFileSync(sock, "");
 

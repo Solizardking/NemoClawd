@@ -1,11 +1,11 @@
 ---
 title:
-  page: "Monitor NemoClaw Sandbox Activity and Debug Issues"
+  page: "Monitor NemoClawd Sandbox Activity and Debug Issues"
   nav: "Monitor Sandbox Activity"
 description: "Inspect sandbox health, trace agent behavior, and diagnose problems."
-keywords: ["monitor nemoclaw sandbox", "debug nemoclaw agent issues"]
+keywords: ["monitor nemoclawd sandbox", "debug nemoclawd agent issues"]
 topics: ["generative_ai", "ai_agents"]
-tags: ["openclaw", "openshell", "monitoring", "troubleshooting", "nemoclaw"]
+tags: ["openclaw", "openshell", "monitoring", "troubleshooting", "nemoclawd"]
 content:
   type: how_to
   difficulty: technical_beginner
@@ -20,11 +20,11 @@ status: published
 
 # Monitor Sandbox Activity and Debug Issues
 
-Use the NemoClaw status, logs, and TUI tools together to inspect sandbox health, trace agent behavior, and diagnose problems.
+Use the NemoClawd status, logs, and TUI tools together to inspect sandbox health, trace agent behavior, and diagnose problems.
 
 ## Prerequisites
 
-- A running NemoClaw sandbox.
+- A running NemoClawd sandbox.
 - The OpenShell CLI on your `PATH`.
 
 ## Check Sandbox Health
@@ -32,13 +32,13 @@ Use the NemoClaw status, logs, and TUI tools together to inspect sandbox health,
 Run the status command to view the sandbox state, blueprint run information, and active inference configuration:
 
 ```console
-$ openclaw nemoclaw status
+$ openclaw nemoclawd status
 ```
 
 For machine-readable output, add the `--json` flag:
 
 ```console
-$ openclaw nemoclaw status --json
+$ openclaw nemoclawd status --json
 ```
 
 Key fields in the output include the following:
@@ -52,25 +52,25 @@ Key fields in the output include the following:
 Stream the most recent log output from the blueprint runner and sandbox:
 
 ```console
-$ openclaw nemoclaw logs
+$ openclaw nemoclawd logs
 ```
 
 To follow the log output in real time:
 
 ```console
-$ openclaw nemoclaw logs -f
+$ openclaw nemoclawd logs -f
 ```
 
 To display a specific number of log lines:
 
 ```console
-$ openclaw nemoclaw logs -n 100
+$ openclaw nemoclawd logs -n 100
 ```
 
 To view logs for a specific blueprint run instead of the most recent one:
 
 ```console
-$ openclaw nemoclaw logs --run-id <id>
+$ openclaw nemoclawd logs --run-id <id>
 ```
 
 ## Monitor Network Activity in the TUI
@@ -96,14 +96,14 @@ Refer to [Approve or Deny Agent Network Requests](../network-policy/approve-netw
 Run a test inference request to verify that the provider is responding:
 
 ```console
-$ nemoclaw my-assistant connect
+$ nemoclawd my-assistant connect
 $ openclaw agent --agent main --local -m "Test inference" --session-id debug
 ```
 
 If the request fails, check the following:
 
-1. Run `openclaw nemoclaw status` to confirm the active provider and endpoint.
-2. Run `openclaw nemoclaw logs -f` to view error messages from the blueprint runner.
+1. Run `openclaw nemoclawd status` to confirm the active provider and endpoint.
+2. Run `openclaw nemoclawd logs -f` to view error messages from the blueprint runner.
 3. Verify that the inference endpoint is reachable from the host.
 
 ## Common Issues
@@ -112,10 +112,10 @@ The following table lists common problems and their resolution steps:
 
 | Symptom | Resolution |
 |---|---|
-| Sandbox shows as stopped | Run `nemoclaw onboard` to recreate the sandbox. |
-| Inference requests time out | Verify the provider endpoint is reachable. Check `openclaw nemoclaw status` for the active endpoint. |
+| Sandbox shows as stopped | Run `nemoclawd onboard` to recreate the sandbox. |
+| Inference requests time out | Verify the provider endpoint is reachable. Check `openclaw nemoclawd status` for the active endpoint. |
 | Agent cannot reach an external host | Open the TUI with `openshell term` and approve the blocked request, or add the endpoint to the policy. |
-| Blueprint run failed | Run `openclaw nemoclaw logs --run-id <id>` to view the error output for the failed run. |
+| Blueprint run failed | Run `openclaw nemoclawd logs --run-id <id>` to view the error output for the failed run. |
 
 ## Related Topics
 

@@ -1,11 +1,11 @@
 ---
 title:
-  page: "Deploy NemoClaw to a Remote GPU Instance with Brev"
+  page: "Deploy NemoClawd to a Remote GPU Instance with Brev"
   nav: "Deploy to Remote GPU"
-description: "Provision a remote GPU VM with NemoClaw using Brev deployment."
-keywords: ["deploy nemoclaw remote gpu", "nemoclaw brev cloud deployment"]
+description: "Provision a remote GPU VM with NemoClawd using Brev deployment."
+keywords: ["deploy nemoclawd remote gpu", "nemoclawd brev cloud deployment"]
 topics: ["generative_ai", "ai_agents"]
-tags: ["openclaw", "openshell", "deployment", "gpu", "nemoclaw"]
+tags: ["openclaw", "openshell", "deployment", "gpu", "nemoclawd"]
 content:
   type: how_to
   difficulty: intermediate
@@ -18,23 +18,23 @@ status: published
   SPDX-License-Identifier: Apache-2.0
 -->
 
-# Deploy NemoClaw to a Remote GPU Instance
+# Deploy NemoClawd to a Remote GPU Instance
 
-Run NemoClaw on a remote GPU instance through [Brev](https://brev.nvidia.com).
+Run NemoClawd on a remote GPU instance through [Brev](https://brev.nvidia.com).
 The deploy command provisions the VM, installs dependencies, and connects you to a running sandbox.
 
 ## Prerequisites
 
 - The [Brev CLI](https://brev.nvidia.com) installed and authenticated.
 - An NVIDIA API key from [build.nvidia.com](https://build.nvidia.com).
-- NemoClaw installed locally. Install with `npm install -g @mawdbotsonsolana/nemoclaw`.
+- NemoClawd installed locally. Install with `npm install -g @mawdbotsonsolana/nemoclawd`.
 
 ## Deploy the Instance
 
-Create a Brev instance and run the NemoClaw setup:
+Create a Brev instance and run the NemoClawd setup:
 
 ```console
-$ nemoclaw deploy <instance-name>
+$ nemoclawd deploy <instance-name>
 ```
 
 Replace `<instance-name>` with a name for your remote instance, for example `my-gpu-box`.
@@ -43,7 +43,7 @@ The deploy script performs the following steps on the VM:
 
 1. Installs Docker and the NVIDIA Container Toolkit if a GPU is present.
 2. Installs the OpenShell CLI.
-3. Runs the nemoclaw setup to create the gateway, register providers, and launch the sandbox.
+3. Runs the nemoclawd setup to create the gateway, register providers, and launch the sandbox.
 4. Starts auxiliary services, such as the Telegram bridge and cloudflared tunnel.
 
 ## Connect to the Remote Sandbox
@@ -52,7 +52,7 @@ After deployment finishes, the deploy command opens an interactive shell inside 
 To reconnect after closing the session, run the deploy command again:
 
 ```console
-$ nemoclaw deploy <instance-name>
+$ nemoclawd deploy <instance-name>
 ```
 
 ## Monitor the Remote Sandbox
@@ -60,7 +60,7 @@ $ nemoclaw deploy <instance-name>
 SSH to the instance and run the OpenShell TUI to monitor activity and approve network requests:
 
 ```console
-$ ssh <instance-name> 'cd /home/ubuntu/nemoclaw && set -a && . .env && set +a && openshell term'
+$ ssh <instance-name> 'cd /home/ubuntu/nemoclawd && set -a && . .env && set +a && openshell term'
 ```
 
 ## Verify Inference
@@ -73,13 +73,13 @@ $ openclaw agent --agent main --local -m "Hello from the remote sandbox" --sessi
 
 ## GPU Configuration
 
-The deploy script uses the `NEMOCLAW_GPU` environment variable to select the GPU type.
+The deploy script uses the `NEMOCLAWD_GPU` environment variable to select the GPU type.
 The default value is `a2-highgpu-1g:nvidia-tesla-a100:1`.
-Set this variable before running `nemoclaw deploy` to use a different GPU configuration:
+Set this variable before running `nemoclawd deploy` to use a different GPU configuration:
 
 ```console
-$ export NEMOCLAW_GPU="a2-highgpu-1g:nvidia-tesla-a100:2"
-$ nemoclaw deploy <instance-name>
+$ export NEMOCLAWD_GPU="a2-highgpu-1g:nvidia-tesla-a100:2"
+$ nemoclawd deploy <instance-name>
 ```
 
 ## Related Topics

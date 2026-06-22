@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-# NemoClaw installer — installs Node.js, Ollama (if GPU present), and NemoClaw.
+# NemoClawd installer — installs Node.js, Ollama (if GPU present), and NemoClawd.
 
 set -euo pipefail
 
@@ -18,8 +18,8 @@ command_exists() { command -v "$1" &>/dev/null; }
 MIN_NODE_MAJOR=20
 MIN_NPM_MAJOR=10
 RECOMMENDED_NODE_MAJOR=22
-NPM_PACKAGE="@mawdbotsonsolana/nemoclaw"
-RUNTIME_REQUIREMENT_MSG="NemoClaw requires Node.js >=${MIN_NODE_MAJOR} and npm >=${MIN_NPM_MAJOR} (recommended Node.js ${RECOMMENDED_NODE_MAJOR})."
+NPM_PACKAGE="@mawdbotsonsolana/nemoclawd"
+RUNTIME_REQUIREMENT_MSG="NemoClawd requires Node.js >=${MIN_NODE_MAJOR} and npm >=${MIN_NPM_MAJOR} (recommended Node.js ${RECOMMENDED_NODE_MAJOR})."
 
 # Compare two semver strings (major.minor.patch). Returns 0 if $1 >= $2.
 version_gte() {
@@ -192,19 +192,19 @@ install_or_upgrade_ollama() {
 }
 
 # ---------------------------------------------------------------------------
-# 3. NemoClaw
+# 3. NemoClawd
 # ---------------------------------------------------------------------------
-install_nemoclaw() {
+install_nemoclawd() {
   local local_package_name=""
   if [[ -f "./package.json" ]]; then
     local_package_name="$(node -p "try { require('./package.json').name } catch { '' }" 2>/dev/null || true)"
   fi
 
   if [[ "$local_package_name" == "$NPM_PACKAGE" ]]; then
-    info "NemoClaw package.json found in current directory — installing from source…"
+    info "NemoClawd package.json found in current directory — installing from source…"
     npm install && npm link
   else
-    info "Installing NemoClaw from npm (${NPM_PACKAGE})…"
+    info "Installing NemoClawd from npm (${NPM_PACKAGE})…"
     npm install -g "$NPM_PACKAGE"
   fi
 
@@ -214,20 +214,20 @@ install_nemoclaw() {
 # ---------------------------------------------------------------------------
 # 4. Verify
 # ---------------------------------------------------------------------------
-verify_nemoclaw() {
-  if command_exists nemoclaw; then
-    info "Verified: nemoclaw is available at $(command -v nemoclaw)"
+verify_nemoclawd() {
+  if command_exists nemoclawd; then
+    info "Verified: nemoclawd is available at $(command -v nemoclawd)"
     return 0
   fi
 
-  # nemoclaw not on PATH — try to diagnose and suggest a fix
-  warn "nemoclaw is not on PATH after installation."
+  # nemoclawd not on PATH — try to diagnose and suggest a fix
+  warn "nemoclawd is not on PATH after installation."
 
   local npm_bin
   npm_bin="$(npm config get prefix 2>/dev/null)/bin" || true
 
-  if [[ -n "$npm_bin" && -x "$npm_bin/nemoclaw" ]]; then
-    warn "Found nemoclaw at $npm_bin/nemoclaw but that directory is not on PATH."
+  if [[ -n "$npm_bin" && -x "$npm_bin/nemoclawd" ]]; then
+    warn "Found nemoclawd at $npm_bin/nemoclawd but that directory is not on PATH."
     warn ""
     warn "Add it to your shell profile:"
     warn "  echo 'export PATH=\"$npm_bin:\$PATH\"' >> ~/.bashrc"
@@ -237,22 +237,22 @@ verify_nemoclaw() {
     warn "  echo 'export PATH=\"$npm_bin:\$PATH\"' >> ~/.zshrc"
     warn "  source ~/.zshrc"
     warn ""
-    warn "Continuing — nemoclaw is installed but requires a PATH update."
+    warn "Continuing — nemoclawd is installed but requires a PATH update."
     return 0
   else
-    warn "Could not locate the nemoclaw executable."
+    warn "Could not locate the nemoclawd executable."
     warn "Try running:  npm install -g ${NPM_PACKAGE}"
   fi
 
-  error "Installation failed: nemoclaw binary not found."
+  error "Installation failed: nemoclawd binary not found."
 }
 
 # ---------------------------------------------------------------------------
 # 5. Onboard
 # ---------------------------------------------------------------------------
 run_onboard() {
-  info "Running nemoclaw onboard…"
-  nemoclaw onboard
+  info "Running nemoclawd onboard…"
+  nemoclawd onboard
 }
 
 # ---------------------------------------------------------------------------
@@ -278,7 +278,7 @@ post_install_message() {
   echo "  ──────────────────────────────────────────────────"
   warn "Your current shell may not have the updated PATH."
   echo ""
-  echo "  To use nemoclaw now, run:"
+  echo "  To use nemoclawd now, run:"
   echo ""
   echo "    source $profile"
   echo ""
@@ -291,13 +291,13 @@ post_install_message() {
 # Main
 # ---------------------------------------------------------------------------
 main() {
-  info "=== NemoClaw Installer ==="
+  info "=== NemoClawd Installer ==="
 
   install_nodejs
   ensure_supported_runtime
   # install_or_upgrade_ollama
-  install_nemoclaw
-  verify_nemoclaw
+  install_nemoclawd
+  verify_nemoclawd
   post_install_message
   run_onboard
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
-# deploy.sh — One-command NemoClaw deployment to Fly.io
+# deploy.sh — One-command NemoClawd deployment to Fly.io
 #
 # Usage:
 #   bash deploy.sh
@@ -33,7 +33,7 @@ echo ' | \| |___ _ __  ___  / __| |__ ___ __ __      '
 echo ' | .` / -_| '\''  \/ _ \| (__| / _` \ V  V /   '
 echo ' |_|\_\___|_|_|_\___/ \___|_\__,_|\_/\_/       '
 echo -e "${NC}"
-echo -e "  ${BOLD}Deploy NemoClaw to Fly.io${NC}"
+echo -e "  ${BOLD}Deploy NemoClawd to Fly.io${NC}"
 echo ""
 
 # ── Preflight checks ───────────────────────────────────────────────
@@ -60,19 +60,19 @@ if [ -f "${SCRIPT_DIR}/../../package.json" ]; then
 elif [ -f "${SCRIPT_DIR}/package.json" ]; then
   REPO_ROOT="${SCRIPT_DIR}"
 else
-  fail "Cannot find NemoClaw repo root. Run this from the repo or deploy package."
+  fail "Cannot find NemoClawd repo root. Run this from the repo or deploy package."
 fi
 
 info "Repo root: ${REPO_ROOT}"
 
 # Verify critical files exist
-for f in Dockerfile nemoclaw/dist nemoclaw/openclaw.plugin.json scripts/nemoclaw-start.sh; do
-  [ -e "${REPO_ROOT}/${f}" ] || fail "Missing ${f} — is this a complete NemoClaw checkout?"
+for f in Dockerfile nemoclawd/dist nemoclawd/openclaw.plugin.json scripts/nemoclawd-start.sh; do
+  [ -e "${REPO_ROOT}/${f}" ] || fail "Missing ${f} — is this a complete NemoClawd checkout?"
 done
 
 # ── Gather configuration ───────────────────────────────────────────
 RANDOM_SUFFIX=$(head -c 4 /dev/urandom | od -An -tx1 | tr -d ' \n' | head -c 4)
-DEFAULT_APP="nemoclaw-${RANDOM_SUFFIX}"
+DEFAULT_APP="nemoclawd-${RANDOM_SUFFIX}"
 
 echo ""
 ask "App name [${DEFAULT_APP}]: "
@@ -205,7 +205,7 @@ $FLY apps create "${APP_NAME}" --machines -o personal 2>/dev/null || {
 
 # ── Create volume ──────────────────────────────────────────────────
 info "Creating persistent volume..."
-$FLY volumes create nemoclaw_data \
+$FLY volumes create nemoclawd_data \
   --app "${APP_NAME}" \
   --region "${REGION}" \
   --size 1 \
@@ -218,15 +218,15 @@ info "Setting secrets (encrypted at rest, never in logs)..."
 
 SECRET_ARGS=(
   "SETUP_PASSWORD=${SETUP_PASSWORD}"
-  "NEMOCLAW_GATEWAY_TOKEN=${GATEWAY_TOKEN}"
-  "NEMOCLAW_API_KEY=${API_KEY}"
-  "NEMOCLAW_AUTH_CHOICE=${AUTH_CHOICE}"
+  "NEMOCLAWD_GATEWAY_TOKEN=${GATEWAY_TOKEN}"
+  "NEMOCLAWD_API_KEY=${API_KEY}"
+  "NEMOCLAWD_AUTH_CHOICE=${AUTH_CHOICE}"
 )
 
-[ -n "${TELEGRAM_TOKEN}" ] && SECRET_ARGS+=("NEMOCLAW_TELEGRAM_TOKEN=${TELEGRAM_TOKEN}")
-[ -n "${DISCORD_TOKEN}" ] && SECRET_ARGS+=("NEMOCLAW_DISCORD_TOKEN=${DISCORD_TOKEN}")
-[ -n "${SLACK_BOT_TOKEN}" ] && SECRET_ARGS+=("NEMOCLAW_SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}")
-[ -n "${SLACK_APP_TOKEN}" ] && SECRET_ARGS+=("NEMOCLAW_SLACK_APP_TOKEN=${SLACK_APP_TOKEN}")
+[ -n "${TELEGRAM_TOKEN}" ] && SECRET_ARGS+=("NEMOCLAWD_TELEGRAM_TOKEN=${TELEGRAM_TOKEN}")
+[ -n "${DISCORD_TOKEN}" ] && SECRET_ARGS+=("NEMOCLAWD_DISCORD_TOKEN=${DISCORD_TOKEN}")
+[ -n "${SLACK_BOT_TOKEN}" ] && SECRET_ARGS+=("NEMOCLAWD_SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}")
+[ -n "${SLACK_APP_TOKEN}" ] && SECRET_ARGS+=("NEMOCLAWD_SLACK_APP_TOKEN=${SLACK_APP_TOKEN}")
 [ -n "${SOLANA_RPC_URL}" ] && SECRET_ARGS+=("SOLANA_RPC_URL=${SOLANA_RPC_URL}")
 [ -n "${HELIUS_API_KEY}" ] && SECRET_ARGS+=("HELIUS_API_KEY=${HELIUS_API_KEY}")
 [ -n "${PRIVY_APP_ID}" ] && SECRET_ARGS+=("PRIVY_APP_ID=${PRIVY_APP_ID}")

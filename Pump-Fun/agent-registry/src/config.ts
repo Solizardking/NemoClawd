@@ -1,7 +1,7 @@
 /**
- * NemoClaw Agent Registry — Configuration
+ * NemoClawd Agent Registry — Configuration
  *
- * Reads from env vars and ~/.nemoclaw/ credential files.
+ * Reads from env vars and ~/.nemoclawd/ credential files.
  */
 import 'dotenv/config';
 import { readFileSync, existsSync } from 'node:fs';
@@ -50,7 +50,7 @@ function getCredential(key: string, creds: Record<string, unknown> | null): stri
 
 export function loadConfig(): RegistryConfig {
   const home = process.env.HOME || '/sandbox';
-  const nemoDir = resolve(home, '.nemoclaw');
+  const nemoDir = resolve(home, '.nemoclawd');
   const credsJson = readJson(resolve(nemoDir, 'credentials.json')) as Record<string, string> | null;
   const solanaJson = readJson(resolve(nemoDir, 'solana.json')) as Record<string, string> | null;
 
@@ -82,7 +82,7 @@ export function loadConfig(): RegistryConfig {
     heartbeatIntervalSeconds: Number(process.env.HEARTBEAT_INTERVAL_SECONDS || '60'),
     heartbeatEnabled: process.env.HEARTBEAT_ENABLED !== 'false',
 
-    agentName: process.env.AGENT_NAME || 'NemoClaw',
+    agentName: process.env.AGENT_NAME || 'NemoClawd',
     agentDescription: process.env.AGENT_DESCRIPTION
       || 'Autonomous Solana Trading Agent — Sandboxed, Wallet-Enabled, Telegram-Native',
     agentVersion: process.env.AGENT_VERSION || '0.4.0',

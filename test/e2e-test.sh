@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-# E2E test for NemoClaw + blueprint
+# E2E test for NemoClawd + blueprint
 # Runs inside the Docker sandbox
 
 set -euo pipefail
@@ -24,9 +24,9 @@ openclaw --version && pass "OpenClaw CLI installed" || fail "OpenClaw CLI not fo
 # -------------------------------------------------------
 info "2. Verify plugin can be installed"
 # -------------------------------------------------------
-openclaw plugins install /opt/nemoclaw 2>&1 && pass "Plugin installed" || {
+openclaw plugins install /opt/nemoclawd 2>&1 && pass "Plugin installed" || {
     # If plugins install isn't available, verify the built artifacts exist
-    if [ -f /opt/nemoclaw/dist/index.js ]; then
+    if [ -f /opt/nemoclawd/dist/index.js ]; then
         pass "Plugin built successfully (dist/index.js exists)"
     else
         fail "Plugin build artifacts missing"
@@ -38,7 +38,7 @@ info "3. Verify blueprint YAML is valid"
 # -------------------------------------------------------
 python3 -c "
 import yaml, sys
-bp = yaml.safe_load(open('/opt/nemoclaw-blueprint/blueprint.yaml'))
+bp = yaml.safe_load(open('/opt/nemoclawd-blueprint/blueprint.yaml'))
 assert bp['version'] == '0.1.0', f'Bad version: {bp[\"version\"]}'
 profiles = bp['components']['inference']['profiles']
 assert 'default' in profiles, 'Missing default profile'
@@ -50,7 +50,7 @@ print(f'Profiles: {list(profiles.keys())}')
 # -------------------------------------------------------
 info "4. Verify blueprint runner plan command"
 # -------------------------------------------------------
-cd /opt/nemoclaw-blueprint
+cd /opt/nemoclawd-blueprint
 # Runner will fail at openshell prereq check (expected in test container)
 # We just verify it gets past validation and profile resolution
 python3 orchestrator/runner.py plan --profile vllm --dry-run 2>&1 | tee /tmp/plan-output.txt || true
@@ -71,7 +71,7 @@ info "6. Verify snapshot creation (migration pre-step)"
 # -------------------------------------------------------
 python3 -c "
 import sys
-sys.path.insert(0, '/opt/nemoclaw-blueprint/migrations')
+sys.path.insert(0, '/opt/nemoclawd-blueprint/migrations')
 from snapshot import create_snapshot, list_snapshots
 
 snap = create_snapshot()
@@ -91,7 +91,7 @@ info "7. Verify snapshot restore (eject path)"
 # -------------------------------------------------------
 python3 -c "
 import sys, json, shutil
-sys.path.insert(0, '/opt/nemoclaw-blueprint/migrations')
+sys.path.insert(0, '/opt/nemoclawd-blueprint/migrations')
 from snapshot import list_snapshots, rollback_from_snapshot
 from pathlib import Path
 
@@ -127,7 +127,7 @@ import {
   createArchiveFromDirectory,
   createSnapshotBundle,
   detectHostOpenClaw,
-} from "/opt/nemoclaw/dist/commands/migration-state.js";
+} from "/opt/nemoclawd/dist/commands/migration-state.js";
 
 const logger = {
   info() {},
@@ -179,20 +179,20 @@ try {
       `Sandbox config was not rewritten for default workspace: ${sandboxConfig.agents.defaults.workspace}`,
     );
   }
-  if (sandboxConfig.agents.list[0].agentDir !== "/sandbox/.nemoclaw/migration/agent-dirs/agent-dirs-main-agent-dir") {
+  if (sandboxConfig.agents.list[0].agentDir !== "/sandbox/.nemoclawd/migration/agent-dirs/agent-dirs-main-agent-dir") {
     throw new Error(`Sandbox config did not rewrite agentDir: ${sandboxConfig.agents.list[0].agentDir}`);
   }
 
   const archivePath = path.join(bundle.archivesDir, "workspace.tar");
   await createArchiveFromDirectory(path.join(bundle.snapshotDir, workspaceRoot.snapshotRelativePath), archivePath);
-  const extractDir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-archive-"));
+  const extractDir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclawd-archive-"));
   execFileSync("tar", ["-xf", archivePath, "-C", extractDir]);
   const extractedLink = path.join(extractDir, "shared-link.md");
   if (!fs.lstatSync(extractedLink).isSymbolicLink()) {
     throw new Error(`Tar archive did not preserve symlink: ${extractedLink}`);
   }
 
-  const fallbackHome = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-userprofile-"));
+  const fallbackHome = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclawd-userprofile-"));
   fs.mkdirSync(path.join(fallbackHome, ".openclaw"), { recursive: true });
   fs.writeFileSync(path.join(fallbackHome, ".openclaw", "openclaw.json"), "{}");
   const fallbackState = detectHostOpenClaw({
@@ -211,24 +211,24 @@ pass "Migration inventory handles overrides, external roots, and symlink-safe ar
 # -------------------------------------------------------
 info "9. Verify plugin TypeScript compilation"
 # -------------------------------------------------------
-[ -f /opt/nemoclaw/dist/index.js ] && pass "index.js compiled" || fail "index.js missing"
-[ -f /opt/nemoclaw/dist/commands/migrate.js ] && pass "migrate.js compiled" || fail "migrate.js missing"
-[ -f /opt/nemoclaw/dist/commands/migration-state.js ] && pass "migration-state.js compiled" || fail "migration-state.js missing"
-[ -f /opt/nemoclaw/dist/commands/launch.js ] && pass "launch.js compiled" || fail "launch.js missing"
-[ -f /opt/nemoclaw/dist/commands/connect.js ] && pass "connect.js compiled" || fail "connect.js missing"
-[ -f /opt/nemoclaw/dist/commands/eject.js ] && pass "eject.js compiled" || fail "eject.js missing"
-[ -f /opt/nemoclaw/dist/commands/status.js ] && pass "status.js compiled" || fail "status.js missing"
-[ -f /opt/nemoclaw/dist/commands/slash.js ] && pass "slash.js compiled" || fail "slash.js missing"
-[ -f /opt/nemoclaw/dist/blueprint/resolve.js ] && pass "resolve.js compiled" || fail "resolve.js missing"
-[ -f /opt/nemoclaw/dist/blueprint/verify.js ] && pass "verify.js compiled" || fail "verify.js missing"
-[ -f /opt/nemoclaw/dist/blueprint/exec.js ] && pass "exec.js compiled" || fail "exec.js missing"
-[ -f /opt/nemoclaw/dist/blueprint/state.js ] && pass "state.js compiled" || fail "state.js missing"
+[ -f /opt/nemoclawd/dist/index.js ] && pass "index.js compiled" || fail "index.js missing"
+[ -f /opt/nemoclawd/dist/commands/migrate.js ] && pass "migrate.js compiled" || fail "migrate.js missing"
+[ -f /opt/nemoclawd/dist/commands/migration-state.js ] && pass "migration-state.js compiled" || fail "migration-state.js missing"
+[ -f /opt/nemoclawd/dist/commands/launch.js ] && pass "launch.js compiled" || fail "launch.js missing"
+[ -f /opt/nemoclawd/dist/commands/connect.js ] && pass "connect.js compiled" || fail "connect.js missing"
+[ -f /opt/nemoclawd/dist/commands/eject.js ] && pass "eject.js compiled" || fail "eject.js missing"
+[ -f /opt/nemoclawd/dist/commands/status.js ] && pass "status.js compiled" || fail "status.js missing"
+[ -f /opt/nemoclawd/dist/commands/slash.js ] && pass "slash.js compiled" || fail "slash.js missing"
+[ -f /opt/nemoclawd/dist/blueprint/resolve.js ] && pass "resolve.js compiled" || fail "resolve.js missing"
+[ -f /opt/nemoclawd/dist/blueprint/verify.js ] && pass "verify.js compiled" || fail "verify.js missing"
+[ -f /opt/nemoclawd/dist/blueprint/exec.js ] && pass "exec.js compiled" || fail "exec.js missing"
+[ -f /opt/nemoclawd/dist/blueprint/state.js ] && pass "state.js compiled" || fail "state.js missing"
 
 # -------------------------------------------------------
-info "10. Verify NemoClaw state management"
+info "10. Verify NemoClawd state management"
 # -------------------------------------------------------
 node -e "
-const { loadState, saveState, clearState } = require('/opt/nemoclaw/dist/blueprint/state.js');
+const { loadState, saveState, clearState } = require('/opt/nemoclawd/dist/blueprint/state.js');
 
 // Initial state should be empty
 let state = loadState();
@@ -247,7 +247,7 @@ state = loadState();
 console.assert(state.lastAction === null, 'Should be cleared');
 
 console.log('State management: create, save, load, clear all working');
-" && pass "NemoClaw state management works" || fail "State management broken"
+" && pass "NemoClawd state management works" || fail "State management broken"
 
 echo ""
 echo -e "${GREEN}========================================${NC}"

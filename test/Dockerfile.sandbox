@@ -1,4 +1,4 @@
-# Lightweight test sandbox for NemoClaw E2E testing
+# Lightweight test sandbox for NemoClawd E2E testing
 # Simulates the OpenClaw-in-OpenShell environment without requiring
 # the full NVIDIA base image or openshell CLI
 
@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Create sandbox user (matches OpenShell convention)
 RUN groupadd -r sandbox && useradd -r -g sandbox -d /sandbox -s /bin/bash sandbox \
-    && mkdir -p /sandbox/.openclaw /sandbox/.nemoclaw \
+    && mkdir -p /sandbox/.openclaw /sandbox/.nemoclawd \
     && chown -R sandbox:sandbox /sandbox
 
 # Install OpenClaw CLI
@@ -24,11 +24,11 @@ RUN npm install -g openclaw@2026.3.11
 RUN pip3 install --break-system-packages pyyaml
 
 # Copy our plugin and blueprint into the sandbox
-COPY nemoclaw/ /opt/nemoclaw/
-COPY nemoclaw-blueprint/ /opt/nemoclaw-blueprint/
+COPY nemoclawd/ /opt/nemoclawd/
+COPY nemoclawd-blueprint/ /opt/nemoclawd-blueprint/
 
 # Build the TS plugin inside the container
-WORKDIR /opt/nemoclaw
+WORKDIR /opt/nemoclawd
 RUN npm install && rm -rf dist && npx tsc
 
 # Patch OpenClaw's nvidia provider to replace Meta Llama 3.3 70B with
@@ -51,8 +51,8 @@ s=re.sub(r'(id:\\s*\"nvidia/nemotron-3-super-120b-a12b.*?maxTokens:\\s*)4096',r'
 open('{}','w').write(s)"
 
 # Set up blueprint for local resolution
-RUN mkdir -p /sandbox/.nemoclaw/blueprints/0.1.0 \
-    && cp -r /opt/nemoclaw-blueprint/* /sandbox/.nemoclaw/blueprints/0.1.0/
+RUN mkdir -p /sandbox/.nemoclawd/blueprints/0.1.0 \
+    && cp -r /opt/nemoclawd-blueprint/* /sandbox/.nemoclawd/blueprints/0.1.0/
 
 WORKDIR /sandbox
 USER sandbox

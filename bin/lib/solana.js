@@ -9,10 +9,10 @@ const path = require("path");
 const os = require("os");
 const crypto = require("crypto");
 
-const NEMOCLAW_DIR = path.join(os.homedir(), ".nemoclaw");
-const SOLANA_CONFIG_PATH = path.join(NEMOCLAW_DIR, "solana.json");
-const WALLET_DIR = path.join(NEMOCLAW_DIR, "wallets");
-const PRIVY_CONFIG_PATH = path.join(NEMOCLAW_DIR, "privy.json");
+const NEMOCLAWD_DIR = path.join(os.homedir(), ".nemoclawd");
+const SOLANA_CONFIG_PATH = path.join(NEMOCLAWD_DIR, "solana.json");
+const WALLET_DIR = path.join(NEMOCLAWD_DIR, "wallets");
+const PRIVY_CONFIG_PATH = path.join(NEMOCLAWD_DIR, "privy.json");
 
 // ── RPC Configuration ────────────────────────────────────────────
 
@@ -54,7 +54,7 @@ function loadSolanaConfig() {
 }
 
 function saveSolanaConfig(config) {
-  fs.mkdirSync(NEMOCLAW_DIR, { recursive: true });
+  fs.mkdirSync(NEMOCLAWD_DIR, { recursive: true });
   fs.writeFileSync(SOLANA_CONFIG_PATH, JSON.stringify(config, null, 2), { mode: 0o600 });
 }
 
@@ -129,8 +129,8 @@ function isTestValidatorRunning() {
 }
 
 function startTestValidator(opts = {}) {
-  const logPath = path.join(NEMOCLAW_DIR, "test-validator.log");
-  const ledgerDir = opts.ledgerDir || path.join(NEMOCLAW_DIR, "test-ledger");
+  const logPath = path.join(NEMOCLAWD_DIR, "test-validator.log");
+  const ledgerDir = opts.ledgerDir || path.join(NEMOCLAWD_DIR, "test-ledger");
 
   const args = [
     "--ledger", ledgerDir,
@@ -192,7 +192,7 @@ function loadPrivyConfig() {
 }
 
 function savePrivyConfig(config) {
-  fs.mkdirSync(NEMOCLAW_DIR, { recursive: true });
+  fs.mkdirSync(NEMOCLAWD_DIR, { recursive: true });
   fs.writeFileSync(PRIVY_CONFIG_PATH, JSON.stringify(config, null, 2), { mode: 0o600 });
 }
 
@@ -203,7 +203,7 @@ function savePrivyConfig(config) {
 async function createPrivyWallet(opts = {}) {
   const config = loadPrivyConfig();
   if (!config || !config.appId || !config.appSecret) {
-    console.error("  Privy credentials not configured. Run `nemoclaw onboard` first.");
+    console.error("  Privy credentials not configured. Run `nemoclawd onboard` first.");
     return null;
   }
 
@@ -259,7 +259,7 @@ async function createPrivyPolicy(opts = {}) {
 
   const policy = {
     version: "1.0",
-    name: opts.name || "NemoClaw Agent Policy",
+    name: opts.name || "NemoClawd Agent Policy",
     chain_type: opts.chainType || "solana",
     rules: [
       {

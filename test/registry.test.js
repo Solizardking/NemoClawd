@@ -7,13 +7,13 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-// Use a temp dir so tests don't touch real ~/.nemoclaw
-const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-test-"));
+// Use a temp dir so tests don't touch real ~/.nemoclawd
+const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclawd-test-"));
 process.env.HOME = tmpDir;
 
 const registry = require("../bin/lib/registry");
 
-const regFile = path.join(tmpDir, ".nemoclaw", "sandboxes.json");
+const regFile = path.join(tmpDir, ".nemoclawd", "sandboxes.json");
 const openshellConfigDir = path.join(tmpDir, ".config", "openshell");
 
 beforeEach(() => {
@@ -110,9 +110,9 @@ describe("registry", () => {
     registry.registerSandbox({ name: "nemo" });
     registry.setDefault("old-default");
 
-    fs.mkdirSync(path.join(openshellConfigDir, "gateways", "nemoclaw"), { recursive: true });
-    fs.writeFileSync(path.join(openshellConfigDir, "active_gateway"), "nemoclaw\n");
-    fs.writeFileSync(path.join(openshellConfigDir, "gateways", "nemoclaw", "last_sandbox"), "nemo\n");
+    fs.mkdirSync(path.join(openshellConfigDir, "gateways", "nemoclawd"), { recursive: true });
+    fs.writeFileSync(path.join(openshellConfigDir, "active_gateway"), "nemoclawd\n");
+    fs.writeFileSync(path.join(openshellConfigDir, "gateways", "nemoclawd", "last_sandbox"), "nemo\n");
 
     assert.equal(registry.getPreferredDefault(), "nemo");
   });
@@ -122,9 +122,9 @@ describe("registry", () => {
     registry.registerSandbox({ name: "beta" });
     registry.setDefault("beta");
 
-    fs.mkdirSync(path.join(openshellConfigDir, "gateways", "nemoclaw"), { recursive: true });
-    fs.writeFileSync(path.join(openshellConfigDir, "active_gateway"), "nemoclaw\n");
-    fs.writeFileSync(path.join(openshellConfigDir, "gateways", "nemoclaw", "last_sandbox"), "ghost\n");
+    fs.mkdirSync(path.join(openshellConfigDir, "gateways", "nemoclawd"), { recursive: true });
+    fs.writeFileSync(path.join(openshellConfigDir, "active_gateway"), "nemoclawd\n");
+    fs.writeFileSync(path.join(openshellConfigDir, "gateways", "nemoclawd", "last_sandbox"), "ghost\n");
 
     assert.equal(registry.getPreferredDefault(), "beta");
   });

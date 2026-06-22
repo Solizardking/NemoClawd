@@ -1,11 +1,11 @@
 ---
 title:
-  page: "NemoClaw CLI Commands Reference"
+  page: "NemoClawd CLI Commands Reference"
   nav: "Commands"
-description: "Full CLI reference for plugin and standalone NemoClaw commands."
-keywords: ["nemoclaw cli commands", "nemoclaw command reference", "solana agent cli", "privy wallet"]
+description: "Full CLI reference for plugin and standalone NemoClawd commands."
+keywords: ["nemoclawd cli commands", "nemoclawd command reference", "solana agent cli", "privy wallet"]
 topics: ["generative_ai", "ai_agents", "solana"]
-tags: ["openclaw", "openshell", "nemoclaw", "cli", "solana", "pump-fun", "privy"]
+tags: ["openclaw", "openshell", "nemoclawd", "cli", "solana", "pump-fun", "privy"]
 content:
   type: reference
   difficulty: technical_beginner
@@ -20,43 +20,43 @@ status: published
 
 # Commands
 
-NemoClaw provides two command interfaces.
-The plugin commands run under the `openclaw nemoclaw` namespace inside the OpenClaw CLI.
-The standalone `nemoclaw` binary handles host-side setup, deployment, Solana integration, and service management.
-Both interfaces are installed when you run `npm install -g @mawdbotsonsolana/nemoclaw`.
+NemoClawd provides two command interfaces.
+The plugin commands run under the `openclaw nemoclawd` namespace inside the OpenClaw CLI.
+The standalone `nemoclawd` binary handles host-side setup, deployment, Solana integration, and service management.
+Both interfaces are installed when you run `npm install -g @mawdbotsonsolana/nemoclawd`.
 
 ## Quick Start
 
-### `nemoclaw launch`
+### `nemoclawd launch`
 
 Run the fastest host-side path after installation.
 
 ```console
-$ nemoclaw launch
+$ nemoclawd launch
 ```
 
 This command:
 
-- runs `nemoclaw doctor`
+- runs `nemoclawd doctor`
 - runs onboarding automatically if no sandbox exists
 - starts the best available Solana stack for the current machine
 - falls back to relay-only mode when `TELEGRAM_BOT_TOKEN` is not configured yet
 
-### `nemoclaw solana`
+### `nemoclawd solana`
 
 One-shot command that shows your Solana configuration status and lists all available actions.
 If no sandbox exists, it runs the full onboard wizard automatically.
 
 ```console
-$ nemoclaw solana
+$ nemoclawd solana
 ```
 
-### `nemoclaw doctor`
+### `nemoclawd doctor`
 
 Run a host-side diagnostic pass before onboarding or going live.
 
 ```console
-$ nemoclaw doctor
+$ nemoclawd doctor
 ```
 
 This checks:
@@ -67,13 +67,13 @@ This checks:
 - sandbox registry state
 - Solana RPC, Privy wallet, Telegram token, and Helius configuration
 
-### `nemoclaw onboard`
+### `nemoclawd onboard`
 
 Run the **9-step** interactive setup wizard.
 The wizard creates an OpenShell gateway, registers inference providers, builds the sandbox image, configures Solana RPC, sets up a Privy agentic wallet, and optionally starts a local test-validator.
 
 ```console
-$ nemoclaw onboard
+$ nemoclawd onboard
 ```
 
 **Onboard steps:**
@@ -89,64 +89,64 @@ $ nemoclaw onboard
 
 ## Plugin Commands
 
-### `openclaw nemoclaw launch`
+### `openclaw nemoclawd launch`
 
 Bootstrap OpenClaw inside an OpenShell sandbox.
-If NemoClaw detects an existing host installation, `launch` stops unless you pass `--force`.
+If NemoClawd detects an existing host installation, `launch` stops unless you pass `--force`.
 
 ```console
-$ openclaw nemoclaw launch [--force] [--profile <profile>]
+$ openclaw nemoclawd launch [--force] [--profile <profile>]
 ```
 
 `--force`
 : Skip the ergonomics warning and force plugin-driven bootstrap. Without this flag,
-  NemoClaw recommends using `openshell sandbox create` directly for new installs.
+  NemoClawd recommends using `openshell sandbox create` directly for new installs.
 
 `--profile <profile>`
 : Blueprint profile to use. Default: `default`.
 
-### `openclaw nemoclaw status`
+### `openclaw nemoclawd status`
 
 Display sandbox health, blueprint run state, and inference configuration.
 
 ```console
-$ openclaw nemoclaw status [--json]
+$ openclaw nemoclawd status [--json]
 ```
 
-### `openclaw nemoclaw logs`
+### `openclaw nemoclawd logs`
 
 Stream blueprint execution and sandbox logs.
 
 ```console
-$ openclaw nemoclaw logs [-f] [-n <count>] [--run-id <id>]
+$ openclaw nemoclawd logs [-f] [-n <count>] [--run-id <id>]
 ```
 
-### `/nemoclaw` Slash Command
+### `/nemoclawd` Slash Command
 
 | Subcommand | Description |
 |---|---|
-| `/nemoclaw status` | Show sandbox and inference state |
+| `/nemoclawd status` | Show sandbox and inference state |
 
 ## Standalone Host Commands
 
 ### Solana Quick Start
 
-#### `nemoclaw solana`
+#### `nemoclawd solana`
 
 Show the Solana quick-start overview for the default sandbox.
 
 ```console
-$ nemoclaw solana
+$ nemoclawd solana
 ```
 
 This prints the active RPC, wallet, and the recommended Solana runtime commands.
 
-#### `nemoclaw solana start [sandbox]`
+#### `nemoclawd solana start [sandbox]`
 
 Run the one-shot Solana startup flow.
 
 ```console
-$ nemoclaw solana start my-assistant
+$ nemoclawd solana start my-assistant
 ```
 
 This launches the bundled Solana operator stack inside the sandbox:
@@ -156,16 +156,16 @@ This launches the bundled Solana operator stack inside the sandbox:
 - realtime websocket relay
 - wallet heartbeat and vault logging
 
-If no sandbox exists yet, NemoClaw runs `onboard` first and then starts the stack.
+If no sandbox exists yet, NemoClawd runs `onboard` first and then starts the stack.
 
-#### `nemoclaw wallet [create|list|status]`
+#### `nemoclawd wallet [create|list|status]`
 
 Manage the Privy-backed Solana wallet used by the agent.
 
 ```console
-$ nemoclaw wallet create
-$ nemoclaw wallet list
-$ nemoclaw wallet status
+$ nemoclawd wallet create
+$ nemoclawd wallet list
+$ nemoclawd wallet status
 ```
 
 `create` provisions a Privy-managed Solana wallet and can optionally create a default
@@ -174,60 +174,60 @@ current Privy, wallet, and RPC configuration.
 
 ### Sandbox Management
 
-#### `nemoclaw <name> connect`
+#### `nemoclawd <name> connect`
 
 Open an interactive shell inside the sandbox. The sandbox includes Solana CLI tools,
 Pump-Fun SDK, `helius`, and the Privy agentic wallet skill.
 
 ```console
-$ nemoclaw my-assistant connect
+$ nemoclawd my-assistant connect
 ```
 
-#### `nemoclaw <name> status`
+#### `nemoclawd <name> status`
 
 Show sandbox status, health, inference config, Solana RPC, and wallet info.
 
 ```console
-$ nemoclaw my-assistant status
+$ nemoclawd my-assistant status
 ```
 
-#### `nemoclaw <name> logs`
+#### `nemoclawd <name> logs`
 
 View sandbox logs. Use `--follow` to stream output in real time.
 
 ```console
-$ nemoclaw my-assistant logs [--follow]
+$ nemoclawd my-assistant logs [--follow]
 ```
 
-#### `nemoclaw <name> destroy`
+#### `nemoclawd <name> destroy`
 
 Stop the NIM container and delete the sandbox.
 
 ```console
-$ nemoclaw my-assistant destroy
+$ nemoclawd my-assistant destroy
 ```
 
 ### Solana Agent Commands
 
-#### `nemoclaw <name> solana-stack`
+#### `nemoclawd <name> solana-stack`
 
 Start the Solana operator stack inside the sandbox.
 
 ```console
-$ nemoclaw my-assistant solana-stack
+$ nemoclawd my-assistant solana-stack
 ```
 
-This is the sandbox-scoped equivalent of `nemoclaw solana start`.
-The stack writes service and runtime records to `~/.nemoclaw/vault/`.
+This is the sandbox-scoped equivalent of `nemoclawd solana start`.
+The stack writes service and runtime records to `~/.nemoclawd/vault/`.
 
-#### `nemoclaw <name> solana-agent`
+#### `nemoclawd <name> solana-agent`
 
 Run the Pump-Fun Solana tracker bot inside the sandbox.
 Monitors agent payments, creator fee claims, and token buybacks on-chain,
 sending real-time Telegram notifications.
 
 ```console
-$ nemoclaw my-assistant solana-agent
+$ nemoclawd my-assistant solana-agent
 ```
 
 **Required env:** `AGENT_TOKEN_MINT_ADDRESS`, `DEVELOPER_WALLET`, `TELEGRAM_BOT_TOKEN`
@@ -236,65 +236,65 @@ $ nemoclaw my-assistant solana-agent
 The bot also supports sub-modes inside the sandbox:
 
 ```console
-$ nemoclaw-solana-agent bot              # Default: start tracker bot
-$ nemoclaw-solana-agent test-validator   # Start local validator with Pump programs
-$ nemoclaw-solana-agent status           # Show Solana + wallet status
+$ nemoclawd-solana-agent bot              # Default: start tracker bot
+$ nemoclawd-solana-agent test-validator   # Start local validator with Pump programs
+$ nemoclawd-solana-agent status           # Show Solana + wallet status
 ```
 
-#### `nemoclaw <name> solana-bridge`
+#### `nemoclawd <name> solana-bridge`
 
 Real-time Solana-Telegram bridge that monitors wallet activity and narrates it in natural language.
 Detects incoming/outgoing transfers, buys, sells, token balance changes, and program interactions.
 
 ```console
-$ nemoclaw my-assistant solana-bridge
+$ nemoclawd my-assistant solana-bridge
 ```
 
 **Required env:** `TELEGRAM_BOT_TOKEN`
-**Optional env:** `SOLANA_RPC_URL`, `SOLANA_WS_URL`, `HELIUS_API_KEY`, `DEVELOPER_WALLET`, `AGENT_TOKEN_MINT_ADDRESS`, `TELEGRAM_NOTIFY_CHAT_IDS`, `PRIVY_APP_ID`, `NEMOCLAW_VAULT_DIR`, `HEARTBEAT_SECONDS`, `MIN_WALLET_SOL`, `STOP_BALANCE_SOL`
+**Optional env:** `SOLANA_RPC_URL`, `SOLANA_WS_URL`, `HELIUS_API_KEY`, `DEVELOPER_WALLET`, `AGENT_TOKEN_MINT_ADDRESS`, `TELEGRAM_NOTIFY_CHAT_IDS`, `PRIVY_APP_ID`, `NEMOCLAWD_VAULT_DIR`, `HEARTBEAT_SECONDS`, `MIN_WALLET_SOL`, `STOP_BALANCE_SOL`
 
-The bridge is broadcast-oriented and is designed to coexist with the main Pump-Fun Telegram bot without polling conflicts. It pushes narrated wallet activity to `TELEGRAM_NOTIFY_CHAT_IDS`, records heartbeat snapshots and wallet activity to the NemoClaw vault, and marks funded or protection state from wallet balance thresholds while the primary bot continues handling interactive commands.
+The bridge is broadcast-oriented and is designed to coexist with the main Pump-Fun Telegram bot without polling conflicts. It pushes narrated wallet activity to `TELEGRAM_NOTIFY_CHAT_IDS`, records heartbeat snapshots and wallet activity to the NemoClawd vault, and marks funded or protection state from wallet balance thresholds while the primary bot continues handling interactive commands.
 
-#### `nemoclaw <name> telegram-bot`
+#### `nemoclawd <name> telegram-bot`
 
 Run the Pump-Fun Telegram monitor bot with full API and event filtering.
 
 ```console
-$ nemoclaw my-assistant telegram-bot
+$ nemoclawd my-assistant telegram-bot
 ```
 
-#### `nemoclaw <name> payment-app`
+#### `nemoclawd <name> payment-app`
 
 Run the payment-gated Pump-Fun agent app (Next.js).
 
 ```console
-$ nemoclaw my-assistant payment-app
+$ nemoclawd my-assistant payment-app
 ```
 
-#### `nemoclaw <name> swarm-bot`
+#### `nemoclawd <name> swarm-bot`
 
 Run the Pump-Fun swarm dashboard.
 
 ```console
-$ nemoclaw my-assistant swarm-bot
+$ nemoclawd my-assistant swarm-bot
 ```
 
-#### `nemoclaw <name> websocket-server`
+#### `nemoclawd <name> websocket-server`
 
 Run the Pump-Fun WebSocket relay server.
 
 ```console
-$ nemoclaw my-assistant websocket-server
+$ nemoclawd my-assistant websocket-server
 ```
 
 ### Policy Presets
 
-#### `nemoclaw <name> policy-add`
+#### `nemoclawd <name> policy-add`
 
 Add a policy preset to a sandbox.
 
 ```console
-$ nemoclaw my-assistant policy-add
+$ nemoclawd my-assistant policy-add
 ```
 
 Available presets include:
@@ -308,63 +308,63 @@ Available presets include:
 | `pypi` | Python package index |
 | `npm` | npm registry |
 
-#### `nemoclaw <name> policy-list`
+#### `nemoclawd <name> policy-list`
 
 List available presets and show which are applied.
 
 ```console
-$ nemoclaw my-assistant policy-list
+$ nemoclawd my-assistant policy-list
 ```
 
 ### Deploy
 
-#### `nemoclaw deploy <instance>`
+#### `nemoclawd deploy <instance>`
 
 Deploy to a remote Brev GPU instance.
 
 ```console
-$ nemoclaw deploy my-gpu-box
+$ nemoclawd deploy my-gpu-box
 ```
 
 ### Services
 
-#### `nemoclaw start`
+#### `nemoclawd start`
 
 Start auxiliary services (Telegram bridge, cloudflared tunnel).
 
 ```console
-$ nemoclaw start
+$ nemoclawd start
 ```
 
-#### `nemoclaw stop`
+#### `nemoclawd stop`
 
 Stop all auxiliary services.
 
 ```console
-$ nemoclaw stop
+$ nemoclawd stop
 ```
 
-#### `nemoclaw status`
+#### `nemoclawd status`
 
 Show sandbox list and service status.
 
 ```console
-$ nemoclaw status
+$ nemoclawd status
 ```
 
 ### Infrastructure
 
-#### `nemoclaw setup-spark`
+#### `nemoclawd setup-spark`
 
-Set up NemoClaw on DGX Spark (cgroup v2 + Docker fixes for Ubuntu 24.04).
+Set up NemoClawd on DGX Spark (cgroup v2 + Docker fixes for Ubuntu 24.04).
 
 ```console
-$ sudo nemoclaw setup-spark
+$ sudo nemoclawd setup-spark
 ```
 
 ## Sandbox Solana Tooling
 
-When connected to a sandbox (`nemoclaw <name> connect`), the following tools are available:
+When connected to a sandbox (`nemoclawd <name> connect`), the following tools are available:
 
 ### Solana CLI
 

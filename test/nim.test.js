@@ -36,8 +36,8 @@ describe("nim", () => {
   });
 
   describe("containerName", () => {
-    it("prefixes with nemoclaw-nim-", () => {
-      assert.equal(nim.containerName("my-sandbox"), "nemoclaw-nim-my-sandbox");
+    it("prefixes with nemoclawd-nim-", () => {
+      assert.equal(nim.containerName("my-sandbox"), "nemoclawd-nim-my-sandbox");
     });
   });
 

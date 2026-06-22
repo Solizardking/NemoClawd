@@ -6,7 +6,7 @@
   <code>8cHzQHUS2s2h8TzCmfqPKYiM4dSt4roa3n7MyRLApump</code>
 </p>
 <p align="center">
-  <a href="https://www.npmjs.com/package/nemoclaw"><img src="https://img.shields.io/npm/v/nemoclaw.svg?style=flat-square&color=cb3837" alt="npm"></a>
+  <a href="https://www.npmjs.com/package/nemoclawd"><img src="https://img.shields.io/npm/v/nemoclawd.svg?style=flat-square&color=cb3837" alt="npm"></a>
   <a href="https://github.com/x402agent/NemoClawd/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/status-alpha-orange?style=flat-square" alt="Status">
   <img src="https://img.shields.io/badge/Solana-Mainnet-9945FF?style=flat-square&logo=solana&logoColor=white" alt="Solana">
@@ -53,13 +53,13 @@
 ### Quick Start
 
 ```bash
-npm install -g @mawdbotsonsolana/nemoclaw
+npm install -g @mawdbotsonsolana/nemoclawd
 
 # Start with Grok + Solana tools
-nemoclaw launch
+nemoclawd launch
 
 # Run demo walkthrough
-nemoclaw demo
+nemoclawd demo
 ```
 
 ### xAI Grok Setup
@@ -132,7 +132,7 @@ LEARN    → write INFERRED signals → Dream agent promotes to LEARNED
 Every `nemoClawd` user gets a companion — a procedurally generated Blockchain Buddy with its own wallet, trading personality, stats, and animated ASCII sprite.
 
 ```bash
-nemoclaw birth   # hatch yours now
+nemoclawd birth   # hatch yours now
 ```
 
 ### Species (18 total)

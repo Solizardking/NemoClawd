@@ -1,9 +1,9 @@
 ---
 title:
-  page: "NemoClaw Inference Profiles"
+  page: "NemoClawd Inference Profiles"
   nav: "Inference Profiles"
 description: "Configuration reference for inference profiles — Ollama (DeepSolana), NVIDIA Cloud, vLLM."
-keywords: ["nemoclaw inference profiles", "nemoclaw deepsolana", "nemoclaw ollama", "nemoclaw nvidia cloud provider"]
+keywords: ["nemoclawd inference profiles", "nemoclawd deepsolana", "nemoclawd ollama", "nemoclawd nvidia cloud provider"]
 topics: ["generative_ai", "ai_agents"]
 tags: ["openclaw", "openshell", "inference_routing", "llms", "ollama", "deepsolana"]
 content:
@@ -20,14 +20,14 @@ status: published
 
 # Inference Profiles
 
-NemoClaw ships with an inference profile defined in `blueprint.yaml`.
+NemoClawd ships with an inference profile defined in `blueprint.yaml`.
 The profile configures an OpenShell inference provider and model route.
 The agent inside the sandbox uses whichever model is active.
 Inference requests are routed transparently through the OpenShell gateway.
 
 ## Default: Ollama + `8bit/DeepSolana`
 
-When Ollama is detected on `localhost:11434` during `nemoclaw onboard`, NemoClaw:
+When Ollama is detected on `localhost:11434` during `nemoclawd onboard`, NemoClawd:
 
 1. Automatically selects the `ollama-local` provider
 2. Pulls `8bit/DeepSolana` (`ollama pull 8bit/DeepSolana`)
@@ -93,4 +93,4 @@ No sandbox restart is needed.
 - **Credential:** `NVIDIA_API_KEY` environment variable
 
 Get an API key from [build.nvidia.com](https://build.nvidia.com).
-The `nemoclaw onboard` command prompts for this key and stores it in `~/.nemoclaw/credentials.json`.
+The `nemoclawd onboard` command prompts for this key and stores it in `~/.nemoclawd/credentials.json`.

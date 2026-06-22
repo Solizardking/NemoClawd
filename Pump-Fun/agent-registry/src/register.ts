@@ -1,7 +1,7 @@
 /**
- * NemoClaw Agent Registration
+ * NemoClawd Agent Registration
  *
- * Registers the NemoClaw agent on the 8004 Trustless Agent Registry
+ * Registers the NemoClawd agent on the 8004 Trustless Agent Registry
  * and optionally with Pump.fun. Idempotent — checks if already registered.
  */
 import { Keypair, PublicKey, Connection } from '@solana/web3.js';
@@ -34,7 +34,7 @@ function buildAgentMetadata(config: ReturnType<typeof loadConfig>) {
     x402Support: true,
     properties: {
       version: config.agentVersion,
-      runtime: 'nemoclaw',
+      runtime: 'nemoclawd',
       model: '8bit/DeepSolana',
       sandbox: 'openshell',
       agentTokenMint: config.agentTokenMint,
@@ -231,7 +231,7 @@ export async function registerAgent(): Promise<RegistrationResult> {
   const config = loadConfig();
 
   console.log('[registry] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('[registry] NemoClaw Agent Registration');
+  console.log('[registry] NemoClawd Agent Registration');
   console.log('[registry]   Agent: %s v%s', config.agentName, config.agentVersion);
   console.log('[registry]   Wallet: %s', config.developerWallet || 'not set');
   console.log('[registry]   Mint: %s', config.agentTokenMint || 'not set');

@@ -1,6 +1,6 @@
-# Contributing to NemoClaw Documentation
+# Contributing to NemoClawd Documentation
 
-This guide covers how to write, edit, and review documentation for NemoClaw. If you change code that affects user-facing behavior, update the relevant docs in the same PR.
+This guide covers how to write, edit, and review documentation for NemoClawd. If you change code that affects user-facing behavior, update the relevant docs in the same PR.
 
 ## Use the Agent Skills
 
@@ -57,7 +57,7 @@ make docs-live
 ```yaml
 ---
 title:
-  page: "NemoClaw Page Title — Subtitle with Context"
+  page: "NemoClawd Page Title — Subtitle with Context"
   nav: "Short Nav Title"
 description: "One-sentence summary of the page."
 keywords: ["primary keyword", "secondary keyword phrase"]
@@ -109,7 +109,7 @@ These patterns are common in LLM-generated text and erode trust with technical r
 - Use `code` formatting for CLI commands, file paths, flags, parameter names, and values.
 - Use code blocks with the `console` language for CLI examples. Prefix commands with `$`:
   ```console
-  $ nemoclaw onboard
+  $ nemoclawd onboard
   ```
 - Use tables for structured comparisons. Keep tables simple (no nested formatting).
 - Use MyST admonitions (`:::{tip}`, `:::{note}`, `:::{warning}`) for callouts, not bold text.
@@ -129,7 +129,7 @@ Use these consistently:
 | CLI | cli, Cli |
 | API key | api key, API Key |
 | NVIDIA | Nvidia, nvidia |
-| NemoClaw | nemoclaw (in prose), Nemoclaw |
+| NemoClawd | nemoclawd (in prose), Nemoclaw |
 | OpenClaw | openclaw (in prose), Openclaw |
 | OpenShell | Open Shell, openShell, Openshell, openshell |
 | mTLS | MTLS, mtls |

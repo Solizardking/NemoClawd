@@ -1,9 +1,9 @@
 ---
 title:
-  page: "NemoClaw Overview — What It Does and How It Fits Together"
+  page: "NemoClawd Overview — What It Does and How It Fits Together"
   nav: "Overview"
-description: "NemoClaw sandboxes OpenClaw with NVIDIA inference and declarative policy."
-keywords: ["nemoclaw overview", "openclaw openshell sandbox plugin"]
+description: "NemoClawd sandboxes OpenClaw with NVIDIA inference and declarative policy."
+keywords: ["nemoclawd overview", "openclaw openshell sandbox plugin"]
 topics: ["generative_ai", "ai_agents"]
 tags: ["openclaw", "openshell", "sandboxing", "inference_routing", "blueprints"]
 content:
@@ -20,7 +20,7 @@ status: published
 
 # Overview
 
-NemoClaw is the [OpenClaw](https://openclaw.ai) plugin for [NVIDIA OpenShell](https://github.com/NVIDIA/OpenShell).
+NemoClawd is the [OpenClaw](https://openclaw.ai) plugin for [NVIDIA OpenShell](https://github.com/NVIDIA/OpenShell).
 It moves OpenClaw into a sandboxed environment where every network request, file access, and inference call is governed by declarative policy.
 
 | Capability              | Description                                                                                                                                          |
@@ -35,19 +35,19 @@ Autonomous AI agents like OpenClaw can make arbitrary network requests, access t
 
 ## Benefits
 
-NemoClaw provides the following benefits.
+NemoClawd provides the following benefits.
 
 | Benefit                    | Description                                                                                                            |
 |----------------------------|------------------------------------------------------------------------------------------------------------------------|
 | Sandboxed execution        | Every agent runs inside an OpenShell sandbox with Landlock, seccomp, and network namespace isolation. No access is granted by default. |
 | NVIDIA cloud inference     | Agent traffic routes through cloud-hosted Nemotron 3 Super 120B via [build.nvidia.com](https://build.nvidia.com), transparent to the agent.          |
 | Declarative network policy | Egress rules are defined in YAML. Unknown hosts are blocked and surfaced to the operator for approval.                 |
-| Single CLI                 | The `nemoclaw` command orchestrates the full stack: gateway, sandbox, inference provider, and network policy.           |
+| Single CLI                 | The `nemoclawd` command orchestrates the full stack: gateway, sandbox, inference provider, and network policy.           |
 | Blueprint lifecycle        | Versioned blueprints handle sandbox creation, digest verification, and reproducible setup.                             |
 
 ## Use Cases
 
-You can use NemoClaw for various use cases including the following.
+You can use NemoClawd for various use cases including the following.
 
 | Use Case                  | Description                                                                                  |
 |---------------------------|----------------------------------------------------------------------------------------------|
@@ -57,10 +57,10 @@ You can use NemoClaw for various use cases including the following.
 
 ## Next Steps
 
-Explore the following pages to learn more about NemoClaw.
+Explore the following pages to learn more about NemoClawd.
 
-- [How It Works](../about/how-it-works.md) to understand the key concepts behind NemoClaw.
-- [Quickstart](../get-started/quickstart.md) to install NemoClaw and run your first agent.
+- [How It Works](../about/how-it-works.md) to understand the key concepts behind NemoClawd.
+- [Quickstart](../get-started/quickstart.md) to install NemoClawd and run your first agent.
 - [Switch Inference Providers](../inference/switch-inference-providers.md) to configure the inference provider.
 - [Approve or Deny Network Requests](../network-policy/approve-network-requests.md) to manage egress approvals.
 - [Deploy to a Remote GPU Instance](../deployment/deploy-to-remote-gpu.md) for persistent operation.

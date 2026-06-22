@@ -1,9 +1,9 @@
 ---
 title:
-  page: "NemoClaw Network Policies — Baseline Rules and Operator Approval"
+  page: "NemoClawd Network Policies — Baseline Rules and Operator Approval"
   nav: "Network Policies"
 description: "Baseline network policy, filesystem rules, and operator approval flow."
-keywords: ["nemoclaw network policy", "sandbox egress control operator approval"]
+keywords: ["nemoclawd network policy", "sandbox egress control operator approval"]
 topics: ["generative_ai", "ai_agents"]
 tags: ["openclaw", "openshell", "sandboxing", "network_policy", "security"]
 content:
@@ -20,13 +20,13 @@ status: published
 
 # Network Policies
 
-NemoClaw runs with a strict-by-default network policy.
+NemoClawd runs with a strict-by-default network policy.
 The sandbox can only reach endpoints that are explicitly allowed.
 Any request to an unlisted destination is intercepted by OpenShell, and the operator is prompted to approve or deny it in real time through the TUI.
 
 ## Baseline Policy
 
-The baseline policy is defined in `nemoclaw-blueprint/policies/openclaw-sandbox.yaml`.
+The baseline policy is defined in `nemoclawd-blueprint/policies/openclaw-sandbox.yaml`.
 
 ### Filesystem
 
@@ -127,10 +127,10 @@ This opens a split tmux session with the TUI on the left and the agent on the ri
 
 ### Static Changes
 
-Edit `nemoclaw-blueprint/policies/openclaw-sandbox.yaml` and re-run the onboard wizard:
+Edit `nemoclawd-blueprint/policies/openclaw-sandbox.yaml` and re-run the onboard wizard:
 
 ```console
-$ nemoclaw onboard
+$ nemoclawd onboard
 ```
 
 ### Dynamic Changes

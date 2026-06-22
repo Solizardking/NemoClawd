@@ -13,7 +13,7 @@ const policies = require("./policies");
 const { checkCgroupConfig } = require("./preflight");
 const solana = require("./solana");
 const HOST_GATEWAY_URL = "http://host.openshell.internal";
-const EXPERIMENTAL = process.env.NEMOCLAW_EXPERIMENTAL === "1";
+const EXPERIMENTAL = process.env.NEMOCLAWD_EXPERIMENTAL === "1";
 
 // ── Helpers ──────────────────────────────────────────────────────
 
@@ -156,7 +156,7 @@ async function preflight() {
     console.error("");
     console.error("     To fix, run:");
     console.error("");
-    console.error("       nemoclaw setup-spark");
+    console.error("       nemoclawd setup-spark");
     console.error("");
     console.error("     This adds \"default-cgroupns-mode\": \"host\" to /etc/docker/daemon.json");
     console.error("     (preserving any existing settings) and restarts Docker.");
@@ -186,9 +186,9 @@ async function startGateway(gpu) {
   step(2, TOTAL_STEPS, "Starting OpenShell gateway");
 
   // Destroy old gateway
-  run("openshell gateway destroy -g nemoclaw 2>/dev/null || true", { ignoreError: true });
+  run("openshell gateway destroy -g nemoclawd 2>/dev/null || true", { ignoreError: true });
 
-  const gwArgs = ["--name", "nemoclaw"];
+  const gwArgs = ["--name", "nemoclawd"];
   if (gpu && gpu.nimCapable) gwArgs.push("--gpu");
 
   run(`openshell gateway start ${gwArgs.join(" ")}`, { ignoreError: false });
@@ -248,10 +248,10 @@ async function createSandbox(gpu) {
   // Stage build context
   const { mkdtempSync } = require("fs");
   const os = require("os");
-  const buildCtx = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-build-"));
+  const buildCtx = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclawd-build-"));
   fs.copyFileSync(path.join(ROOT, "Dockerfile"), path.join(buildCtx, "Dockerfile"));
-  run(`cp -r "${path.join(ROOT, "nemoclaw")}" "${buildCtx}/nemoclaw"`);
-  run(`cp -r "${path.join(ROOT, "nemoclaw-blueprint")}" "${buildCtx}/nemoclaw-blueprint"`);
+  run(`cp -r "${path.join(ROOT, "nemoclawd")}" "${buildCtx}/nemoclawd"`);
+  run(`cp -r "${path.join(ROOT, "nemoclawd-blueprint")}" "${buildCtx}/nemoclawd-blueprint"`);
   run(`cp -r "${path.join(ROOT, "scripts")}" "${buildCtx}/scripts"`);
   [
     path.join("Pump-Fun", "agent-app"),
@@ -268,19 +268,19 @@ async function createSandbox(gpu) {
     path.join("Pump-Fun", "x402"),
     path.join("pump-fun-skills-main", "tokenized-agents"),
   ].forEach((relativePath) => copyIntoBuildContext(buildCtx, relativePath));
-  run(`rm -rf "${buildCtx}/nemoclaw/node_modules" "${buildCtx}/nemoclaw/src"`, { ignoreError: true });
+  run(`rm -rf "${buildCtx}/nemoclawd/node_modules" "${buildCtx}/nemoclawd/src"`, { ignoreError: true });
 
-  const pluginDist = path.join(buildCtx, "nemoclaw", "dist");
+  const pluginDist = path.join(buildCtx, "nemoclawd", "dist");
   if (!fs.existsSync(pluginDist) || fs.readdirSync(pluginDist).length === 0) {
     run(`rm -rf "${buildCtx}"`, { ignoreError: true });
-    console.error("  nemoclaw/dist is missing or empty.");
+    console.error("  nemoclawd/dist is missing or empty.");
     console.error("  Run `npm run build:plugin` and retry onboarding.");
     process.exit(1);
   }
 
   // Create sandbox (use -- echo to avoid dropping into interactive shell)
   // Pass the base policy so sandbox starts in proxy mode (required for policy updates later)
-  const basePolicyPath = path.join(ROOT, "nemoclaw-blueprint", "policies", "openclaw-sandbox.yaml");
+  const basePolicyPath = path.join(ROOT, "nemoclawd-blueprint", "policies", "openclaw-sandbox.yaml");
   const createArgs = [
     `--from "${buildCtx}/Dockerfile"`,
     `--name "${sandboxName}"`,
@@ -300,7 +300,7 @@ async function createSandbox(gpu) {
   for (const [key, val] of Object.entries(solanaEnv)) {
     if (val) envArgs.push(`${key}=${val}`);
   }
-  run(`set -o pipefail; openshell sandbox create ${createArgs.join(" ")} -- env ${envArgs.join(" ")} nemoclaw-start 2>&1 | awk '/Sandbox allocated/{if(!seen){print;seen=1}next}1'`);
+  run(`set -o pipefail; openshell sandbox create ${createArgs.join(" ")} -- env ${envArgs.join(" ")} nemoclawd-start 2>&1 | awk '/Sandbox allocated/{if(!seen){print;seen=1}next}1'`);
 
   const sandboxStatus = waitForSandboxReady(sandboxName);
   if (!sandboxStatus.ok) {
@@ -347,7 +347,7 @@ async function setupNim(sandboxName, gpu) {
   const ollamaRunning = !!runCapture("curl -sf http://localhost:11434/api/tags 2>/dev/null", { ignoreError: true });
   const vllmRunning = !!runCapture("curl -sf http://localhost:8000/v1/models 2>/dev/null", { ignoreError: true });
 
-  // Auto-select only with NEMOCLAW_EXPERIMENTAL=1 (prevents silent misconfiguration)
+  // Auto-select only with NEMOCLAWD_EXPERIMENTAL=1 (prevents silent misconfiguration)
   if (EXPERIMENTAL) {
     if (vllmRunning) {
       console.log("  ✓ vLLM detected on localhost:8000 — using it [experimental]");
@@ -367,7 +367,7 @@ async function setupNim(sandboxName, gpu) {
     }
   }
 
-  // Build options list — only show local options with NEMOCLAW_EXPERIMENTAL=1
+  // Build options list — only show local options with NEMOCLAWD_EXPERIMENTAL=1
   const options = [];
   if (EXPERIMENTAL && gpu && gpu.nimCapable) {
     options.push({ key: "nim", label: "Local NIM container (NVIDIA GPU) [experimental]" });
@@ -654,7 +654,7 @@ async function setupSolana(sandboxName) {
           // Create default spending policy
           console.log("  Creating default spending policy (max 0.1 SOL per tx)...");
           const policy = await solana.createPrivyPolicy({
-            name: "NemoClaw Default",
+            name: "NemoClawd Default",
             maxLamports: 100_000_000,
             ownerPublicKey: wallet.address,
           });
@@ -727,7 +727,7 @@ async function setupTestValidator(sandboxName, solConfig) {
   if (!solana.isSolanaCliInstalled()) {
     console.log("  solana-test-validator not installed on host.");
     console.log("  You can run it inside the sandbox instead:");
-    console.log("    nemoclaw <name> connect");
+    console.log("    nemoclawd <name> connect");
     console.log("    solana-test-validator &");
     return;
   }
@@ -760,7 +760,7 @@ async function setupTestValidator(sandboxName, solConfig) {
   if (result) {
     console.log(`  ✓ test-validator running (pid ${result.pid}, rpc: ${result.rpcUrl})`);
   } else {
-    console.log("  ⚠ test-validator failed to start. Check ~/.nemoclaw/test-validator.log");
+    console.log("  ⚠ test-validator failed to start. Check ~/.nemoclawd/test-validator.log");
   }
 }
 
@@ -874,11 +874,11 @@ function printDashboard(sandboxName, model, provider) {
     console.log(`  Agent Token  ${solConfig.agentTokenMint}`);
   }
   console.log(`  ${"─".repeat(56)}`);
-  console.log(`  Run:         nemoclaw ${sandboxName} connect`);
-  console.log(`  Solana Up:   nemoclaw solana start ${sandboxName}`);
-  console.log(`  Status:      nemoclaw ${sandboxName} status`);
-  console.log(`  Logs:        nemoclaw ${sandboxName} logs --follow`);
-  console.log(`  Solana:      nemoclaw ${sandboxName} solana-agent`);
+  console.log(`  Run:         nemoclawd ${sandboxName} connect`);
+  console.log(`  Solana Up:   nemoclawd solana start ${sandboxName}`);
+  console.log(`  Status:      nemoclawd ${sandboxName} status`);
+  console.log(`  Logs:        nemoclawd ${sandboxName} logs --follow`);
+  console.log(`  Solana:      nemoclawd ${sandboxName} solana-agent`);
   console.log(`  ${"─".repeat(56)}`);
   console.log("");
 }
@@ -887,7 +887,7 @@ function printDashboard(sandboxName, model, provider) {
 
 async function onboard() {
   console.log("");
-  console.log("  NemoClaw Onboarding");
+  console.log("  NemoClawd Onboarding");
   console.log("  ===================");
 
   const gpu = await preflight();

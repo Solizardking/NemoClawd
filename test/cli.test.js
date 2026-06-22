@@ -7,14 +7,14 @@ const { execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 
-const CLI = path.join(__dirname, "..", "bin", "nemoclaw.js");
+const CLI = path.join(__dirname, "..", "bin", "nemoclawd.js");
 
 function run(args) {
   try {
     const out = execSync(`node "${CLI}" ${args}`, {
       encoding: "utf-8",
       timeout: 10000,
-      env: { ...process.env, HOME: "/tmp/nemoclaw-cli-test-" + Date.now() },
+      env: { ...process.env, HOME: "/tmp/nemoclawd-cli-test-" + Date.now() },
     });
     return { code: 0, out };
   } catch (err) {
@@ -49,7 +49,7 @@ describe("CLI dispatch", () => {
   it("no args exits 0 (shows help)", () => {
     const r = run("");
     assert.equal(r.code, 0);
-    assert.ok(r.out.includes("nemoclaw"));
+    assert.ok(r.out.includes("nemoclawd"));
   });
 
   it("unknown command exits 1", () => {
@@ -73,9 +73,9 @@ describe("CLI dispatch", () => {
   });
 
   it("solana overview prefers active gateway last sandbox over first registry entry", () => {
-    const home = "/tmp/nemoclaw-cli-test-" + Date.now();
-    const sandboxDir = path.join(home, ".nemoclaw");
-    const openshellDir = path.join(home, ".config", "openshell", "gateways", "nemoclaw");
+    const home = "/tmp/nemoclawd-cli-test-" + Date.now();
+    const sandboxDir = path.join(home, ".nemoclawd");
+    const openshellDir = path.join(home, ".config", "openshell", "gateways", "nemoclawd");
     fs.mkdirSync(sandboxDir, { recursive: true });
     fs.mkdirSync(openshellDir, { recursive: true });
     fs.writeFileSync(
@@ -89,7 +89,7 @@ describe("CLI dispatch", () => {
       }),
     );
     fs.mkdirSync(path.join(home, ".config", "openshell"), { recursive: true });
-    fs.writeFileSync(path.join(home, ".config", "openshell", "active_gateway"), "nemoclaw\n");
+    fs.writeFileSync(path.join(home, ".config", "openshell", "active_gateway"), "nemoclawd\n");
     fs.writeFileSync(path.join(openshellDir, "last_sandbox"), "nemo\n");
 
     const out = execSync(`node "${CLI}" solana`, {

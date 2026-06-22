@@ -11,7 +11,7 @@ const { isCgroupV2, readDaemonJson, checkCgroupConfig } = require("../bin/lib/pr
 
 // Helper: create a temp daemon.json with given content and return its path.
 function writeTempDaemon(content) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclaw-preflight-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nemoclawd-preflight-"));
   const p = path.join(dir, "daemon.json");
   fs.writeFileSync(p, content, "utf-8");
   return p;

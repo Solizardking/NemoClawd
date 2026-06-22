@@ -1,11 +1,11 @@
 ---
 title:
-  page: "Customize the NemoClaw Sandbox Network Policy"
+  page: "Customize the NemoClawd Sandbox Network Policy"
   nav: "Customize Network Policy"
 description: "Add, remove, or modify allowed endpoints in the sandbox policy."
-keywords: ["customize nemoclaw network policy", "sandbox egress policy configuration"]
+keywords: ["customize nemoclawd network policy", "sandbox egress policy configuration"]
 topics: ["generative_ai", "ai_agents"]
-tags: ["openclaw", "openshell", "network_policy", "security", "nemoclaw"]
+tags: ["openclaw", "openshell", "network_policy", "security", "nemoclawd"]
 content:
   type: how_to
   difficulty: intermediate
@@ -21,11 +21,11 @@ status: published
 # Customize the Sandbox Network Policy
 
 Add, remove, or modify the endpoints that the sandbox is allowed to reach.
-NemoClaw supports both static policy changes that persist across restarts and dynamic updates to a running sandbox.
+NemoClawd supports both static policy changes that persist across restarts and dynamic updates to a running sandbox.
 
 ## Prerequisites
 
-- A running NemoClaw sandbox for dynamic changes, or the NemoClaw source repository for static changes.
+- A running NemoClawd sandbox for dynamic changes, or the NemoClawd source repository for static changes.
 - The OpenShell CLI on your `PATH`.
 
 ## Static Changes
@@ -34,7 +34,7 @@ Static changes modify the baseline policy file and take effect after the next sa
 
 ### Edit the Policy File
 
-Open `nemoclaw-blueprint/policies/openclaw-sandbox.yaml` and add or modify endpoint entries.
+Open `nemoclawd-blueprint/policies/openclaw-sandbox.yaml` and add or modify endpoint entries.
 
 Each entry in the `network` section defines an endpoint group with the following fields:
 
@@ -52,7 +52,7 @@ Each entry in the `network` section defines an endpoint group with the following
 Apply the updated policy by re-running the onboard wizard:
 
 ```console
-$ nemoclaw onboard
+$ nemoclawd onboard
 ```
 
 The wizard picks up the modified policy file and applies it to the sandbox.
@@ -62,7 +62,7 @@ The wizard picks up the modified policy file and applies it to the sandbox.
 Check that the sandbox is running with the updated policy:
 
 ```console
-$ openclaw nemoclaw status
+$ openclaw nemoclawd status
 ```
 
 ## Dynamic Changes
@@ -72,7 +72,7 @@ Dynamic changes apply a policy update to a running sandbox without restarting it
 ### Create a Policy File
 
 Create a YAML file with the endpoints to add.
-Follow the same format as the baseline policy in `nemoclaw-blueprint/policies/openclaw-sandbox.yaml`.
+Follow the same format as the baseline policy in `nemoclawd-blueprint/policies/openclaw-sandbox.yaml`.
 
 ### Apply the Policy
 

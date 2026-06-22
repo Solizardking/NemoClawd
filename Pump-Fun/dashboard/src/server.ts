@@ -1,5 +1,5 @@
 /**
- * NemoClaw Operations Dashboard — HTTP Server
+ * NemoClawd Operations Dashboard — HTTP Server
  *
  * Full-stack dashboard with:
  * - REST API for service health, process management, and log streaming
@@ -117,7 +117,7 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
   // Health (for this dashboard itself)
   if (req.method === 'GET' && path === '/health') {
     json(res, 200, {
-      service: 'nemoclaw-dashboard',
+      service: 'nemoclawd-dashboard',
       status: 'ok',
       uptimeMs: Date.now() - startedAt,
       services: poller.getAll().length,
@@ -409,7 +409,7 @@ async function main(): Promise<void> {
 
   console.log('');
   console.log('  ╔══════════════════════════════════════════════════╗');
-  console.log('  ║     🦀 NemoClaw Operations Dashboard             ║');
+  console.log('  ║     🦀 NemoClawd Operations Dashboard             ║');
   console.log('  ╠══════════════════════════════════════════════════╣');
   console.log(`  ║  Port:       ${String(config.port).padEnd(37)}║`);
   console.log(`  ║  Services:   ${String(config.services.length).padEnd(37)}║`);
@@ -439,7 +439,7 @@ async function main(): Promise<void> {
   eventLog.push({
     service: 'dashboard',
     type: 'info',
-    title: 'NemoClaw Dashboard started',
+    title: 'NemoClawd Dashboard started',
     details: {
       services: config.services.length,
       processes: config.processes.length,

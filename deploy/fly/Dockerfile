@@ -1,5 +1,5 @@
-# NemoClaw Fly.io deployment image
-# Builds the full NemoClaw stack + wrapper server for managed deployment.
+# NemoClawd Fly.io deployment image
+# Builds the full NemoClawd stack + wrapper server for managed deployment.
 
 FROM node:22-slim
 
@@ -38,12 +38,12 @@ RUN npm install -g openclaw@2026.3.11
 # Install Helius CLI
 RUN npm install -g helius-cli 2>/dev/null || echo 'WARN: helius-cli install skipped'
 
-# ── Copy NemoClaw plugin + assets ──────────────────────────────────
-COPY nemoclaw/dist/ /opt/nemoclaw/dist/
-COPY nemoclaw/openclaw.plugin.json /opt/nemoclaw/
-COPY nemoclaw/package.json /opt/nemoclaw/
+# ── Copy NemoClawd plugin + assets ──────────────────────────────────
+COPY nemoclawd/dist/ /opt/nemoclawd/dist/
+COPY nemoclawd/openclaw.plugin.json /opt/nemoclawd/
+COPY nemoclawd/package.json /opt/nemoclawd/
 
-COPY nemoclaw-blueprint/ /opt/nemoclaw-blueprint/
+COPY nemoclawd-blueprint/ /opt/nemoclawd-blueprint/
 
 COPY Pump-Fun/agent-app/ /opt/pump-fun/agent-app/
 COPY Pump-Fun/agent-tasks/ /opt/pump-fun/agent-tasks/
@@ -66,7 +66,7 @@ COPY Pump-Fun/src/ /opt/pump-fun/sdk/src/
 COPY pump-fun-skills-main/tokenized-agents/ /opt/pump-fun/tokenized-agents-skill/
 
 # Install runtime dependencies
-WORKDIR /opt/nemoclaw
+WORKDIR /opt/nemoclawd
 RUN npm install --omit=dev
 
 WORKDIR /opt/pump-fun/agent-app
@@ -85,15 +85,15 @@ WORKDIR /opt/pump-fun/x402
 RUN npm install
 
 # ── Copy startup scripts ──────────────────────────────────────────
-COPY scripts/nemoclaw-start.sh /usr/local/bin/nemoclaw-start
-COPY scripts/nemoclaw-solana-agent.sh /usr/local/bin/nemoclaw-solana-agent
-COPY scripts/nemoclaw-payment-app.sh /usr/local/bin/nemoclaw-payment-app
-COPY scripts/nemoclaw-telegram-bot.sh /usr/local/bin/nemoclaw-telegram-bot
-COPY scripts/nemoclaw-swarm-bot.sh /usr/local/bin/nemoclaw-swarm-bot
-COPY scripts/nemoclaw-websocket-server.sh /usr/local/bin/nemoclaw-websocket-server
-COPY scripts/nemoclaw-solana-bridge.sh /usr/local/bin/nemoclaw-solana-bridge
-COPY scripts/nemoclaw-solana-stack.sh /usr/local/bin/nemoclaw-solana-stack
-RUN chmod +x /usr/local/bin/nemoclaw-*
+COPY scripts/nemoclawd-start.sh /usr/local/bin/nemoclawd-start
+COPY scripts/nemoclawd-solana-agent.sh /usr/local/bin/nemoclawd-solana-agent
+COPY scripts/nemoclawd-payment-app.sh /usr/local/bin/nemoclawd-payment-app
+COPY scripts/nemoclawd-telegram-bot.sh /usr/local/bin/nemoclawd-telegram-bot
+COPY scripts/nemoclawd-swarm-bot.sh /usr/local/bin/nemoclawd-swarm-bot
+COPY scripts/nemoclawd-websocket-server.sh /usr/local/bin/nemoclawd-websocket-server
+COPY scripts/nemoclawd-solana-bridge.sh /usr/local/bin/nemoclawd-solana-bridge
+COPY scripts/nemoclawd-solana-stack.sh /usr/local/bin/nemoclawd-solana-stack
+RUN chmod +x /usr/local/bin/nemoclawd-*
 
 # ── Wrapper server (setup wizard + proxy) ──────────────────────────
 COPY deploy/fly/wrapper/ /opt/wrapper/

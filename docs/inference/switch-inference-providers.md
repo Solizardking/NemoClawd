@@ -1,9 +1,9 @@
 ---
 title:
-  page: "Switch NemoClaw Inference Models at Runtime"
+  page: "Switch NemoClawd Inference Models at Runtime"
   nav: "Switch Inference Models"
 description: "Change the active inference model without restarting the sandbox."
-keywords: ["switch nemoclaw inference model", "change inference runtime"]
+keywords: ["switch nemoclawd inference model", "change inference runtime"]
 topics: ["generative_ai", "ai_agents"]
 tags: ["openclaw", "openshell", "inference_routing"]
 content:
@@ -25,7 +25,7 @@ No restart is required.
 
 ## Prerequisites
 
-- A running NemoClaw sandbox.
+- A running NemoClawd sandbox.
 - The OpenShell CLI on your `PATH`.
 
 ## Switch to a Different Model
@@ -37,20 +37,20 @@ $ openshell inference set --provider nvidia-nim --model nvidia/nemotron-3-super-
 ```
 
 This requires the `NVIDIA_API_KEY` environment variable.
-The `nemoclaw onboard` command stores this key in `~/.nemoclaw/credentials.json` on first run.
+The `nemoclawd onboard` command stores this key in `~/.nemoclawd/credentials.json` on first run.
 
 ## Verify the Active Model
 
 Run the status command to confirm the change:
 
 ```console
-$ openclaw nemoclaw status
+$ openclaw nemoclawd status
 ```
 
 Add the `--json` flag for machine-readable output:
 
 ```console
-$ openclaw nemoclaw status --json
+$ openclaw nemoclawd status --json
 ```
 
 The output includes the active provider, model, and endpoint.

@@ -1,5 +1,5 @@
 /**
- * NemoClaw Dashboard Configuration
+ * NemoClawd Dashboard Configuration
  *
  * Auto-detects sandbox services, inference provider, and wallet config.
  */
@@ -53,7 +53,7 @@ function readJson(filePath: string): Record<string, unknown> | null {
 
 export function loadConfig(): DashboardConfig {
   const home = process.env.HOME || '/sandbox';
-  const nemoDir = resolve(home, '.nemoclaw');
+  const nemoDir = resolve(home, '.nemoclawd');
   const solanaJson = readJson(resolve(nemoDir, 'solana.json')) as Record<string, string> | null;
   const credsJson = readJson(resolve(nemoDir, 'credentials.json')) as Record<string, string> | null;
   const registryJson = readJson(resolve(nemoDir, 'registry.json')) as Record<string, unknown> | null;

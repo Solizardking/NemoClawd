@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /**
- * Telegram → NemoClaw bridge.
+ * Telegram → NemoClawd bridge.
  *
  * Messages from Telegram are forwarded to the OpenClaw agent running
  * inside the sandbox. When the agent needs external access, the
@@ -12,7 +12,7 @@
  * Env:
  *   TELEGRAM_BOT_TOKEN  — from @BotFather
  *   NVIDIA_API_KEY      — for inference
- *   SANDBOX_NAME        — sandbox name (default: nemoclaw)
+ *   SANDBOX_NAME        — sandbox name (default: nemoclawd)
  *   ALLOWED_CHAT_IDS    — comma-separated Telegram chat IDs to accept (optional, accepts all if unset)
  */
 
@@ -21,7 +21,7 @@ const { execSync, spawn } = require("child_process");
 
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const API_KEY = process.env.NVIDIA_API_KEY;
-const SANDBOX = process.env.SANDBOX_NAME || "nemoclaw";
+const SANDBOX = process.env.SANDBOX_NAME || "nemoclawd";
 const ALLOWED_CHATS = process.env.ALLOWED_CHAT_IDS
   ? process.env.ALLOWED_CHAT_IDS.split(",").map((s) => s.trim())
   : null;
@@ -88,11 +88,11 @@ function runAgentInSandbox(message, sessionId) {
     const sshConfig = execSync(`openshell sandbox ssh-config ${SANDBOX}`, { encoding: "utf-8" });
 
     // Write temp ssh config
-    const confPath = `/tmp/nemoclaw-tg-ssh-${sessionId}.conf`;
+    const confPath = `/tmp/nemoclawd-tg-ssh-${sessionId}.conf`;
     require("fs").writeFileSync(confPath, sshConfig);
 
     const escaped = message.replace(/'/g, "'\\''");
-    const cmd = `export NVIDIA_API_KEY='${API_KEY}' && nemoclaw-start openclaw agent --agent main --local -m '${escaped}' --session-id 'tg-${sessionId}'`;
+    const cmd = `export NVIDIA_API_KEY='${API_KEY}' && nemoclawd-start openclaw agent --agent main --local -m '${escaped}' --session-id 'tg-${sessionId}'`;
 
     const proc = spawn("ssh", ["-T", "-F", confPath, `openshell-${SANDBOX}`, cmd], {
       timeout: 120000,
@@ -112,11 +112,11 @@ function runAgentInSandbox(message, sessionId) {
       const lines = stdout.split("\n");
       const responseLines = lines.filter(
         (l) =>
-          !l.startsWith("Setting up NemoClaw") &&
+          !l.startsWith("Setting up NemoClawd") &&
           !l.startsWith("[plugins]") &&
           !l.startsWith("(node:") &&
-          !l.includes("NemoClaw ready") &&
-          !l.includes("NemoClaw registered") &&
+          !l.includes("NemoClawd ready") &&
+          !l.includes("NemoClawd registered") &&
           !l.includes("openclaw agent") &&
           !l.includes("┌─") &&
           !l.includes("│ ") &&
@@ -169,7 +169,7 @@ async function poll() {
         if (msg.text === "/start") {
           await sendMessage(
             chatId,
-            "🦀 *NemoClaw* — powered by Nemotron 3 Super 120B\n\n" +
+            "🦀 *NemoClawd* — powered by Nemotron 3 Super 120B\n\n" +
               "Send me a message and I'll run it through the OpenClaw agent " +
               "inside an OpenShell sandbox.\n\n" +
               "If the agent needs external access, the TUI will prompt for approval.",
@@ -221,7 +221,7 @@ async function main() {
 
   console.log("");
   console.log("  ┌─────────────────────────────────────────────────────┐");
-  console.log("  │  NemoClaw Telegram Bridge                          │");
+  console.log("  │  NemoClawd Telegram Bridge                          │");
   console.log("  │                                                     │");
   console.log(`  │  Bot:      @${(me.result.username + "                    ").slice(0, 37)}│`);
   console.log("  │  Sandbox:  " + (SANDBOX + "                              ").slice(0, 40) + "│");

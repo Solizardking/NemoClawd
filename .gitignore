@@ -1,7 +1,7 @@
 # ── Dependencies ──────────────────────────────────────────────────
 node_modules/
 dist/
-!nemoclaw/dist/
+!nemoclawd/dist/
 .pytest_cache/
 __pycache__/
 *.pyc
@@ -25,9 +25,9 @@ docs/_build/
 !.env.example
 !.env.template
 
-# NemoClaw local configuration (contains API keys, wallet refs)
-.nemoclaw/
-*.nemoclaw.json
+# NemoClawd local configuration (contains API keys, wallet refs)
+.nemoclawd/
+*.nemoclawd.json
 
 # Privy wallet configuration (contains app secrets)
 privy.json

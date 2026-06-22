@@ -23,7 +23,7 @@ node --version
 
 2. Install nemoClawd:
 ```bash
-npm install -g @mawdbotsonsolana/nemoclaw
+npm install -g @mawdbotsonsolana/nemoclawd
 ```
 
 3. Set xAI API key and Helius credentials:
@@ -35,12 +35,12 @@ export HELIUS_RPC_URL="https://mainnet.helius-rpc.com/?api-key=$HELIUS_API_KEY"
 
 4. Launch with Grok integration:
 ```bash
-nemoclaw launch
+nemoclawd launch
 ```
 
 5. Run the demo walkthrough:
 ```bash
-nemoclaw demo
+nemoclawd demo
 ```
 
 ## xAI Grok Integration
@@ -81,8 +81,8 @@ nemoClawd exposes 31 MCP tools for Solana operations:
 Generate companion agents with unique trading personalities:
 
 ```bash
-nemoclaw birth   # Hatch a buddy
-nemoclaw spinners   # Preview custom animations
+nemoclawd birth   # Hatch a buddy
+nemoclawd spinners   # Preview custom animations
 ```
 
 18 species: SolDog, BONK Dog, dogwifhat, Whale, Bull, Bear, Pepe, Pump.fun, Sniper Bot, and more.
@@ -90,22 +90,22 @@ nemoclaw spinners   # Preview custom animations
 ## Telegram Commands
 
 ```bash
-nemoclaw telegram start
+nemoclawd telegram start
 
 # Market commands
-nemoclaw sol              # SOL price
-nemoclaw price <token>    # Token price
-nemoclaw trending         # Top trending tokens
+nemoclawd sol              # SOL price
+nemoclawd price <token>    # Token price
+nemoclawd trending         # Top trending tokens
 
 # Trading commands
-nemoclaw wallet           # Wallet PnL
-nemoclaw scan             # Pump.fun scanner
-nemoclaw snipe <config>   # Sniper bot
+nemoclawd wallet           # Wallet PnL
+nemoclawd scan             # Pump.fun scanner
+nemoclawd snipe <config>   # Sniper bot
 
 # Grok AI commands
-nemoclaw grok <question>  # Chat with Grok
-nemoclaw xsearch <query>  # X/Twitter search
-nemoclaw imagine <prompt> # Generate images
+nemoclawd grok <question>  # Chat with Grok
+nemoclawd xsearch <query>  # X/Twitter search
+nemoclawd imagine <prompt> # Generate images
 ```
 
 ## Memory Tiers
@@ -139,9 +139,9 @@ LEARN    → write INFERRED → Dream promotes to LEARNED
 
 ## Recovery Rules
 
-- If the sandbox gateway is down, restart with: `docker start openshell-cluster-nemoclaw`
+- If the sandbox gateway is down, restart with: `docker start openshell-cluster-nemoclawd`
 - If port conflicts occur, stop the conflicting process or move it off the conflicting port.
-- Run `nemoclaw doctor` to check all prerequisites.
+- Run `nemoclawd doctor` to check all prerequisites.
 
 ## Public-Release Safety Check
 

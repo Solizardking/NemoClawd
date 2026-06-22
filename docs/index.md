@@ -1,11 +1,11 @@
 ---
 title:
-  page: "NVIDIA NemoClaw Developer Guide"
-  nav: "NemoClaw"
+  page: "NVIDIA NemoClawd Developer Guide"
+  nav: "NemoClawd"
 description: "Sandbox OpenClaw with NVIDIA inference routing and strict network policies."
-keywords: ["nemoclaw sandboxed ai agent", "openclaw openshell plugin"]
+keywords: ["nemoclawd sandboxed ai agent", "openclaw openshell plugin"]
 topics: ["generative_ai", "ai_agents"]
-tags: ["openclaw", "openshell", "sandboxing", "inference_routing", "nemoclaw"]
+tags: ["openclaw", "openshell", "sandboxing", "inference_routing", "nemoclawd"]
 content:
   type: get_started
   difficulty: technical_beginner
@@ -18,14 +18,14 @@ status: published
   SPDX-License-Identifier: Apache-2.0
 -->
 
-# NVIDIA NemoClaw
+# NVIDIA NemoClawd
 
 ```{include} ../README.md
 :start-after: <!-- start-badges -->
 :end-before: <!-- end-badges -->
 ```
 
-NemoClaw is the OpenClaw plugin for [NVIDIA OpenShell](https://github.com/NVIDIA/OpenShell).
+NemoClawd is the OpenClaw plugin for [NVIDIA OpenShell](https://github.com/NVIDIA/OpenShell).
 It runs OpenClaw inside a sandboxed environment with NVIDIA cloud inference, such as Nemotron 3 Super 120B through [build.nvidia.com](https://build.nvidia.com).
 The sandbox enforces strict network policies and operator-controlled egress approval.
 
@@ -77,13 +77,13 @@ Install the CLI and launch a sandboxed OpenClaw instance in a few commands.
     <span class="nc-term-dot nc-term-dot-g"></span>
   </div>
   <div class="nc-term-body">
-    <div><span class="nc-ps">$ </span>npm install -g @mawdbotsonsolana/nemoclaw</div>
+    <div><span class="nc-ps">$ </span>npm install -g @mawdbotsonsolana/nemoclawd</div>
   </div>
 </div>
 ```
 
-Run `nemoclaw doctor` to validate your machine, or `nemoclaw --help` to view the full CLI reference.
-You can also clone the [NemoClaw repository](https://github.com/x402agent/NemoClaw) to explore the plugin source and blueprint.
+Run `nemoclawd doctor` to validate your machine, or `nemoclawd --help` to view the full CLI reference.
+You can also clone the [NemoClawd repository](https://github.com/x402agent/NemoClawd) to explore the plugin source and blueprint.
 
 Proceed to the [Quickstart](get-started/quickstart.md) for step-by-step instructions.
 
@@ -94,11 +94,11 @@ Proceed to the [Quickstart](get-started/quickstart.md) for step-by-step instruct
 ::::{grid} 2 2 3 3
 :gutter: 3
 
-:::{grid-item-card} About NemoClaw
+:::{grid-item-card} About NemoClawd
 :link: about/overview
 :link-type: doc
 
-Learn what NemoClaw does and how it integrates OpenClaw with OpenShell.
+Learn what NemoClawd does and how it integrates OpenClaw with OpenShell.
 
 +++
 {bdg-secondary}`Concept`
@@ -183,7 +183,7 @@ Home <self>
 ```
 
 ```{toctree}
-:caption: About NemoClaw
+:caption: About NemoClawd
 :hidden:
 
 Overview <about/overview>
