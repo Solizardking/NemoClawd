@@ -84,8 +84,8 @@ do_start() {
   [ -z "${TELEGRAM_BOT_TOKEN:-}" ] && warn "TELEGRAM_BOT_TOKEN not set — Telegram bridge will not start."
   command -v node > /dev/null || fail "node not found. Install Node.js first."
 
-  if command -v clawd-box > /dev/null 2>&1; then
-    clawd-box sandbox list 2>&1 | grep -q "Ready" || warn "No sandbox in Ready state."
+  if command -v openshell > /dev/null 2>&1; then
+    openshell sandbox list 2>&1 | grep -q "Ready" || warn "No sandbox in Ready state."
   fi
 
   mkdir -p "$PIDDIR"
@@ -116,7 +116,7 @@ do_start() {
   [ -n "$tunnel_url" ] && printf "  │  Public URL:  %-40s│\n" "$tunnel_url"
   is_running telegram-bridge && echo "  │  Telegram:    bridge running                        │" || echo "  │  Telegram:    not started (no token)                │"
   echo "  │                                                     │"
-  echo "  │  Run 'clawd-box term' to monitor egress approvals   │"
+  echo "  │  Run 'openshell term' to monitor egress approvals   │"
   echo "  └─────────────────────────────────────────────────────┘"
   echo ""
 }

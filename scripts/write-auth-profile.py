@@ -3,7 +3,7 @@
 import json
 import os
 
-path = os.path.expanduser("~/.clawd/agents/main/agent/auth-profiles.json")
+path = os.path.expanduser("~/.openclaw/agents/main/agent/auth-profiles.json")
 os.makedirs(os.path.dirname(path), exist_ok=True)
 
 profile = {

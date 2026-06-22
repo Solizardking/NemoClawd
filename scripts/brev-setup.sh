@@ -57,25 +57,13 @@ if command -v nvidia-smi > /dev/null 2>&1; then
   fi
 fi
 
-# --- 3. Clawd Box CLI (binary release) ---
-if ! command -v clawd-box > /dev/null 2>&1; then
-  info "Installing Clawd Box CLI from GitHub release..."
-  ! command -v gh > /dev/null 2>&1 && { sudo apt-get update -qq > /dev/null 2>&1; sudo apt-get install -y -qq gh > /dev/null 2>&1; }
-  ARCH="$(uname -m)"
-  case "$ARCH" in
-    x86_64|amd64)  ASSET="clawd-box-x86_64-unknown-linux-musl.tar.gz" ;;
-    aarch64|arm64) ASSET="clawd-box-aarch64-unknown-linux-musl.tar.gz" ;;
-    *)             fail "Unsupported architecture: $ARCH" ;;
-  esac
-  tmpdir="$(mktemp -d)"
-  GH_TOKEN="${GITHUB_TOKEN:-}" gh release download --repo 8bitlabs/clawd-box \
-    --pattern "$ASSET" --dir "$tmpdir"
-  tar xzf "$tmpdir/$ASSET" -C "$tmpdir"
-  sudo install -m 755 "$tmpdir/clawd-box" /usr/local/bin/clawd-box
-  rm -rf "$tmpdir"
-  info "clawd-box $(clawd-box --version) installed"
+# --- 3. OpenShell CLI ---
+if ! command -v openshell > /dev/null 2>&1; then
+  info "Installing NVIDIA OpenShell CLI..."
+  bash "$SCRIPT_DIR/install-openshell.sh"
+  info "OpenShell $(openshell --version 2>&1 || echo 'installed')"
 else
-  info "clawd-box already installed: $(clawd-box --version)"
+  info "OpenShell already installed: $(openshell --version 2>&1 || echo 'unknown')"
 fi
 
 # --- 3b. cloudflared ---
