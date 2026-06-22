@@ -62,7 +62,7 @@ function populatedState(): NemoClawdState {
 
 const defaultConfig: NemoClawdConfig = {
   blueprintVersion: "latest",
-  blueprintRegistry: "ghcr.io/nvidia/nemoclawd-blueprint",
+  blueprintRegistry: "ghcr.io/x402agent/nemoclawd-blueprint",
   sandboxName: "openclaw",
   inferenceProvider: "nvidia",
 };

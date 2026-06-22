@@ -14,7 +14,7 @@
       "blueprintRegistry": {
         "type": "string",
         "description": "OCI registry or GitHub release URL for blueprint artifacts",
-        "default": "ghcr.io/nvidia/nemoclawd-blueprint"
+        "default": "ghcr.io/x402agent/nemoclawd-blueprint"
       },
       "sandboxName": {
         "type": "string",

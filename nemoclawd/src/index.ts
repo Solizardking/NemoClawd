@@ -145,7 +145,7 @@ export interface NemoClawdConfig {
 
 const DEFAULT_PLUGIN_CONFIG: NemoClawdConfig = {
   blueprintVersion: "latest",
-  blueprintRegistry: "ghcr.io/nvidia/nemoclawd-blueprint",
+  blueprintRegistry: "ghcr.io/x402agent/nemoclawd-blueprint",
   sandboxName: "openclaw",
   inferenceProvider: "nvidia",
 };
