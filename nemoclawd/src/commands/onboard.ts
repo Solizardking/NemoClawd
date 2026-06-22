@@ -4,6 +4,12 @@
 import { execFileSync, execSync } from "node:child_process";
 import type { PluginLogger, NemoClawdConfig } from "../index.js";
 import {
+  OPENROUTER_CREDENTIAL_ENV,
+  OPENROUTER_ENDPOINT_URL,
+  OPENROUTER_PROVIDER_NAME,
+  resolveDefaultOpenRouterModel,
+} from "../defaults.js";
+import {
   loadOnboardConfig,
   saveOnboardConfig,
   type EndpointType,
@@ -22,8 +28,16 @@ export interface OnboardOptions {
   pluginConfig: NemoClawdConfig;
 }
 
-const ENDPOINT_TYPES: EndpointType[] = ["build", "ncp", "nim-local", "vllm", "ollama", "custom"];
-const SUPPORTED_ENDPOINT_TYPES: EndpointType[] = ["build", "ncp"];
+const ENDPOINT_TYPES: EndpointType[] = [
+  "openrouter",
+  "build",
+  "ncp",
+  "nim-local",
+  "vllm",
+  "ollama",
+  "custom",
+];
+const SUPPORTED_ENDPOINT_TYPES: EndpointType[] = ["openrouter", "build", "ncp"];
 
 function isExperimentalEnabled(): boolean {
   return process.env.NEMOCLAWD_EXPERIMENTAL === "1";
@@ -41,6 +55,8 @@ const DEFAULT_MODELS = [
 
 function resolveProfile(endpointType: EndpointType): string {
   switch (endpointType) {
+    case "openrouter":
+      return "openrouter";
     case "build":
       return "default";
     case "ncp":
@@ -57,6 +73,8 @@ function resolveProfile(endpointType: EndpointType): string {
 
 function resolveProviderName(endpointType: EndpointType): string {
   switch (endpointType) {
+    case "openrouter":
+      return OPENROUTER_PROVIDER_NAME;
     case "build":
       return "nvidia-nim";
     case "ncp":
@@ -73,6 +91,8 @@ function resolveProviderName(endpointType: EndpointType): string {
 
 function resolveCredentialEnv(endpointType: EndpointType): string {
   switch (endpointType) {
+    case "openrouter":
+      return OPENROUTER_CREDENTIAL_ENV;
     case "build":
     case "ncp":
     case "custom":
@@ -96,6 +116,7 @@ function isNonInteractive(opts: OnboardOptions): boolean {
 
 function endpointRequiresApiKey(endpointType: EndpointType): boolean {
   return (
+    endpointType === "openrouter" ||
     endpointType === "build" ||
     endpointType === "ncp" ||
     endpointType === "nim-local" ||
@@ -145,9 +166,14 @@ async function promptEndpoint(
 ): Promise<EndpointType> {
   const options = [
     {
+      label: "OpenRouter",
+      value: "openrouter",
+      hint: `default - ${resolveDefaultOpenRouterModel()}`,
+    },
+    {
       label: "NVIDIA Build (build.nvidia.com)",
       value: "build",
-      hint: "recommended — zero infra, free credits",
+      hint: "NVIDIA cloud endpoint",
     },
     {
       label: "NVIDIA Cloud Partner (NCP)",
@@ -244,6 +270,9 @@ export async function cliOnboard(opts: OnboardOptions): Promise<void> {
     case "build":
       endpointUrl = BUILD_ENDPOINT_URL;
       break;
+    case "openrouter":
+      endpointUrl = OPENROUTER_ENDPOINT_URL;
+      break;
     case "ncp":
       ncpPartner = opts.ncpPartner ?? (await promptInput("NCP partner name"));
       endpointUrl =
@@ -280,14 +309,23 @@ export async function cliOnboard(opts: OnboardOptions): Promise<void> {
     if (opts.apiKey) {
       apiKey = opts.apiKey;
     } else {
-      const envKey = process.env.NVIDIA_API_KEY;
+      const envKey = process.env[credentialEnv];
       if (envKey) {
-        logger.info(`Detected NVIDIA_API_KEY in environment (${maskApiKey(envKey)})`);
+        logger.info(`Detected ${credentialEnv} in environment (${maskApiKey(envKey)})`);
         const useEnv = nonInteractive ? true : await promptConfirm("Use this key?");
-        apiKey = useEnv ? envKey : await promptInput("Enter your NVIDIA API key");
+        apiKey = useEnv
+          ? envKey
+          : await promptInput(
+              endpointType === "openrouter" ? "Enter your OpenRouter API key" : "Enter your NVIDIA API key",
+            );
       } else {
-        logger.info("Get an API key from: https://build.nvidia.com/settings/api-keys");
-        apiKey = await promptInput("Enter your NVIDIA API key");
+        if (endpointType === "openrouter") {
+          logger.info("Get an API key from: https://openrouter.ai/settings/keys");
+          apiKey = await promptInput("Enter your OpenRouter API key");
+        } else {
+          logger.info("Get an API key from: https://build.nvidia.com/settings/api-keys");
+          apiKey = await promptInput("Enter your NVIDIA API key");
+        }
       }
     }
   } else {
@@ -317,7 +355,11 @@ export async function cliOnboard(opts: OnboardOptions): Promise<void> {
       );
     } else {
       logger.error(`API key validation failed: ${validation.error ?? "unknown error"}`);
-      logger.info("Check your key at https://build.nvidia.com/settings/api-keys");
+      logger.info(
+        endpointType === "openrouter"
+          ? "Check your key at https://openrouter.ai/settings/keys"
+          : "Check your key at https://build.nvidia.com/settings/api-keys",
+      );
       return;
     }
   } else {
@@ -330,6 +372,8 @@ export async function cliOnboard(opts: OnboardOptions): Promise<void> {
   let model: string;
   if (opts.model) {
     model = opts.model;
+  } else if (endpointType === "openrouter") {
+    model = resolveDefaultOpenRouterModel();
   } else {
     // Build model options: prefer Nemotron models from the endpoint, fall back to defaults
     const nemotronModels = validation.models.filter((m) => m.includes("nemotron"));

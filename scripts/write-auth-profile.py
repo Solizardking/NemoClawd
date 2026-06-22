@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write NVIDIA auth profile into the Clawd agent config directory."""
+"""Write OpenRouter auth profile into the OpenClaw agent config directory."""
 import json
 import os
 
@@ -7,11 +7,11 @@ path = os.path.expanduser("~/.openclaw/agents/main/agent/auth-profiles.json")
 os.makedirs(os.path.dirname(path), exist_ok=True)
 
 profile = {
-    "nvidia:manual": {
+    "openrouter:manual": {
         "type": "api_key",
-        "provider": "nvidia",
-        "keyRef": {"source": "env", "id": "NVIDIA_API_KEY"},
-        "profileId": "nvidia:manual",
+        "provider": "openrouter",
+        "keyRef": {"source": "env", "id": "OPENROUTER_API_KEY"},
+        "profileId": "openrouter:manual",
     }
 }
 with open(path, "w") as f:

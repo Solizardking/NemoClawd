@@ -287,6 +287,37 @@ Run the Pump-Fun WebSocket relay server.
 $ nemoclawd my-assistant websocket-server
 ```
 
+#### `nemoclawd <name> phoenix-perps [command]`
+
+Run Phoenix perpetual futures tooling through the official Vulcan CLI inside the sandbox.
+NemoClawd writes `~/.vulcan/config.toml` from `RPC_URL` / `SOLANA_RPC_URL` and `PHOENIX_API_URL`.
+
+```console
+$ nemoclawd my-assistant phoenix-perps health
+$ nemoclawd my-assistant phoenix-perps markets
+$ nemoclawd my-assistant phoenix-perps market SOL
+$ nemoclawd my-assistant phoenix-perps paper-init 10000
+$ nemoclawd my-assistant phoenix-perps preflight my-vulcan-wallet
+```
+
+For local MCP:
+
+```console
+$ nemoclawd my-assistant phoenix-perps mcp
+```
+
+For live-capable MCP, set `VULCAN_WALLET_NAME` and `VULCAN_WALLET_PASSWORD` first:
+
+```console
+$ export VULCAN_WALLET_NAME=my-wallet
+$ export VULCAN_WALLET_PASSWORD=...
+$ nemoclawd my-assistant phoenix-perps mcp-live
+```
+
+Live commands execute irreversible Solana mainnet transactions. Use paper mode first, run `preflight`, and apply strict guardrails before any live execution.
+
+**Optional env:** `RPC_URL`, `SOLANA_RPC_URL`, `PHOENIX_API_URL`, `VULCAN_WALLET_NAME`, `VULCAN_WALLET_PASSWORD`, `VULCAN_DEFAULT_SLIPPAGE_BPS`
+
 ### Policy Presets
 
 #### `nemoclawd <name> policy-add`
@@ -302,6 +333,7 @@ Available presets include:
 | Preset | Description |
 |---|---|
 | `solana-rpc` | Solana RPC providers (mainnet, devnet, testnet, Helius, Alchemy, QuikNode) |
+| `phoenix-perps` | Phoenix perpetual futures API, docs, and Vulcan release downloads |
 | `pumpfun` | Pump.fun APIs, Jupiter aggregator, DexScreener |
 | `privy` | Privy agentic wallet APIs (auth, policies, transaction signing) |
 | `telegram` | Telegram Bot API |

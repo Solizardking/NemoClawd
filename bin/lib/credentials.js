@@ -99,6 +99,37 @@ async function ensureApiKey() {
   console.log("");
 }
 
+async function ensureOpenRouterApiKey() {
+  let key = getCredential("OPENROUTER_API_KEY");
+  if (key) {
+    process.env.OPENROUTER_API_KEY = key;
+    return;
+  }
+
+  console.log("");
+  console.log("  ┌─────────────────────────────────────────────────────────────────┐");
+  console.log("  │  OpenRouter API Key required                                    │");
+  console.log("  │                                                                 │");
+  console.log("  │  1. Go to https://openrouter.ai/settings/keys                   │");
+  console.log("  │  2. Create an API key                                           │");
+  console.log("  │  3. Paste the key below                                         │");
+  console.log("  └─────────────────────────────────────────────────────────────────┘");
+  console.log("");
+
+  key = await prompt("  OpenRouter API Key: ", { silent: true });
+
+  if (!key) {
+    console.error("  OpenRouter API key is required.");
+    process.exit(1);
+  }
+
+  saveCredential("OPENROUTER_API_KEY", key);
+  process.env.OPENROUTER_API_KEY = key;
+  console.log("");
+  console.log("  Key saved to ~/.nemoclawd/credentials.json (mode 600)");
+  console.log("");
+}
+
 function isRepoPrivate(repo) {
   try {
     const json = execSync(`gh api repos/${repo} --jq .private 2>/dev/null`, { encoding: "utf-8" }).trim();
@@ -154,6 +185,7 @@ module.exports = {
   getCredential,
   prompt,
   ensureApiKey,
+  ensureOpenRouterApiKey,
   ensureGithubToken,
   isRepoPrivate,
 };

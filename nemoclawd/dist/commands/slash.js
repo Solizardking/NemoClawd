@@ -92,7 +92,7 @@ function slashOnboard() {
             "",
             "Or non-interactively:",
             "```",
-            'openclaw nemoclawd onboard --api-key "$NVIDIA_API_KEY" --endpoint build --model nvidia/nemotron-3-super-120b-a12b',
+            'openclaw nemoclawd onboard --api-key "$OPENROUTER_API_KEY" --endpoint openrouter --model "${OPENROUTER_MODEL:-z-ai/glm-5.2}"',
             "```",
         ].join("\n"),
     };

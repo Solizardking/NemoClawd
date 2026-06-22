@@ -147,7 +147,7 @@ This matters because a financial agent should remain online when capital is low,
 
 Inference requests from the agent never leave the sandbox directly.
 OpenShell intercepts every inference call and routes it to the configured provider.
-NemoClawd routes inference to NVIDIA cloud, specifically Nemotron 3 Super 120B through [build.nvidia.com](https://build.nvidia.com). You can switch models at runtime without restarting the sandbox.
+NemoClawd routes inference to OpenRouter by default, using `OPENROUTER_MODEL` or `z-ai/glm-5.2` when unset. You can switch providers or models at runtime without restarting the sandbox.
 
 Inference is one input to the agent loop, not the final authority. Model output is still constrained by wallet configuration, sandbox policy, and runtime wiring.
 

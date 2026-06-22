@@ -23,8 +23,8 @@
       },
       "inferenceProvider": {
         "type": "string",
-        "description": "Default inference provider type (nvidia, vllm, openai-compatible)",
-        "default": "nvidia"
+        "description": "Default inference provider type (openrouter, nvidia, vllm, openai-compatible)",
+        "default": "openrouter"
       }
     },
     "additionalProperties": false

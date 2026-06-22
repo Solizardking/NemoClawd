@@ -4,10 +4,11 @@
 # Prerequisites:
 #   - Docker running (Colima, Docker Desktop, or native)
 #   - OpenShell CLI installed
-#   - NVIDIA_API_KEY set in environment
+#   - OPENROUTER_API_KEY set in environment
 #
 # Usage:
-#   export NVIDIA_API_KEY=nvapi-...
+#   export OPENROUTER_API_KEY=sk-or-...
+#   export OPENROUTER_MODEL=z-ai/glm-5.2
 #   ./scripts/setup.sh
 
 set -euo pipefail
@@ -46,7 +47,11 @@ fi
 
 command -v openshell > /dev/null || fail "OpenShell CLI not found. Run scripts/install.sh first."
 command -v docker     > /dev/null || fail "docker not found"
-[ -n "${NVIDIA_API_KEY:-}" ] || fail "NVIDIA_API_KEY not set. Get one from build.nvidia.com"
+[ -n "${OPENROUTER_API_KEY:-}" ] || fail "OPENROUTER_API_KEY not set. Get one from openrouter.ai/settings/keys"
+OPENROUTER_MODEL="${OPENROUTER_MODEL:-z-ai/glm-5.2}"
+SOLANA_RPC_URL="${SOLANA_RPC_URL:-${RPC_URL:-https://rpc.solanatracker.io/public}}"
+RPC_URL="${RPC_URL:-$SOLANA_RPC_URL}"
+PHOENIX_API_URL="${PHOENIX_API_URL:-https://perp-api.phoenix.trade}"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -69,9 +74,15 @@ fi
 # 3. Providers
 info "Setting up inference providers..."
 
-upsert_provider "nvidia-nim" "openai" \
-  "NVIDIA_API_KEY=$NVIDIA_API_KEY" \
-  "OPENAI_BASE_URL=https://integrate.api.nvidia.com/v1"
+upsert_provider "openrouter" "openai" \
+  "OPENROUTER_API_KEY=$OPENROUTER_API_KEY" \
+  "OPENAI_BASE_URL=https://openrouter.ai/api/v1"
+
+if [ -n "${NVIDIA_API_KEY:-}" ]; then
+  upsert_provider "nvidia-nim" "openai" \
+    "NVIDIA_API_KEY=$NVIDIA_API_KEY" \
+    "OPENAI_BASE_URL=https://integrate.api.nvidia.com/v1"
+fi
 
 # vllm-local (if vLLM is running)
 if curl -s http://localhost:8000/v1/models > /dev/null 2>&1 || python3 -c "import vllm" 2>/dev/null; then
@@ -98,9 +109,9 @@ if [ "$(uname -s)" = "Darwin" ]; then
   fi
 fi
 
-# 4. Inference route — default to nvidia-nim
-info "Setting inference route to nvidia-nim / Nemotron 3 Super..."
-openshell inference set --no-verify --provider nvidia-nim --model nvidia/nemotron-3-super-120b-a12b > /dev/null 2>&1
+# 4. Inference route — default to OpenRouter
+info "Setting inference route to openrouter / ${OPENROUTER_MODEL}..."
+openshell inference set --no-verify --provider openrouter --model "$OPENROUTER_MODEL" > /dev/null 2>&1
 
 # 5. Build and create sandbox
 info "Deleting old nemoclawd sandbox (if any)..."
@@ -123,8 +134,15 @@ fi
 CREATE_LOG=$(mktemp /tmp/nemoclawd-create-XXXXXX.log)
 set +e
 openshell sandbox create --from "$BUILD_CTX/Dockerfile" --name nemoclawd \
-  --provider nvidia-nim \
-  -- env NVIDIA_API_KEY="$NVIDIA_API_KEY" > "$CREATE_LOG" 2>&1
+  --provider openrouter \
+  -- env \
+    OPENROUTER_API_KEY="$OPENROUTER_API_KEY" \
+    OPENROUTER_MODEL="$OPENROUTER_MODEL" \
+    RPC_URL="$RPC_URL" \
+    SOLANA_RPC_URL="$SOLANA_RPC_URL" \
+    PHOENIX_API_URL="$PHOENIX_API_URL" \
+    VULCAN_WALLET_NAME="${VULCAN_WALLET_NAME:-}" \
+    VULCAN_WALLET_PASSWORD="${VULCAN_WALLET_PASSWORD:-}" > "$CREATE_LOG" 2>&1
 CREATE_RC=$?
 set -e
 rm -rf "$BUILD_CTX"
@@ -134,7 +152,7 @@ grep -E "^  (Step |Building |Built |Created sandbox|Image )|✓" "$CREATE_LOG" |
 if [ "$CREATE_RC" != "0" ]; then
   echo ""
   warn "Last 20 lines of build output:"
-  tail -20 "$CREATE_LOG" | grep -v "NVIDIA_API_KEY"
+  tail -20 "$CREATE_LOG" | grep -Ev "OPENROUTER_API_KEY|NVIDIA_API_KEY|VULCAN_WALLET_PASSWORD"
   fail "Sandbox creation failed (exit $CREATE_RC). Full log: $CREATE_LOG"
 fi
 rm -f "$CREATE_LOG"

@@ -6,7 +6,7 @@
 const fs = require("fs");
 const path = require("path");
 const { ROOT, SCRIPTS, run, runCapture, ensureDockerCliOnPath } = require("./runner");
-const { prompt, ensureApiKey, getCredential } = require("./credentials");
+const { prompt, ensureApiKey, ensureOpenRouterApiKey, getCredential } = require("./credentials");
 const registry = require("./registry");
 const nim = require("./nim");
 const policies = require("./policies");
@@ -14,6 +14,11 @@ const { checkCgroupConfig } = require("./preflight");
 const solana = require("./solana");
 const HOST_GATEWAY_URL = "http://host.openshell.internal";
 const EXPERIMENTAL = process.env.NEMOCLAWD_EXPERIMENTAL === "1";
+const OPENROUTER_ENDPOINT_URL = "https://openrouter.ai/api/v1";
+
+function defaultOpenRouterModel() {
+  return process.env.OPENROUTER_MODEL || getCredential("OPENROUTER_MODEL") || "z-ai/glm-5.2";
+}
 
 // ── Helpers ──────────────────────────────────────────────────────
 
@@ -291,8 +296,14 @@ async function createSandbox(gpu) {
   console.log(`  Creating sandbox '${sandboxName}' (this takes a few minutes on first run)...`);
   const chatUiUrl = process.env.CHAT_UI_URL || 'http://127.0.0.1:18789';
   const envArgs = [`CHAT_UI_URL=${chatUiUrl}`];
-  if (process.env.NVIDIA_API_KEY) {
-    envArgs.push(`NVIDIA_API_KEY=${process.env.NVIDIA_API_KEY}`);
+  const openRouterKey = getCredential("OPENROUTER_API_KEY");
+  if (openRouterKey) {
+    envArgs.push(`OPENROUTER_API_KEY=${openRouterKey}`);
+    envArgs.push(`OPENROUTER_MODEL=${defaultOpenRouterModel()}`);
+  }
+  const nvidiaKey = getCredential("NVIDIA_API_KEY");
+  if (nvidiaKey) {
+    envArgs.push(`NVIDIA_API_KEY=${nvidiaKey}`);
   }
 
   // Inject Solana environment variables into the sandbox
@@ -339,7 +350,7 @@ async function setupNim(sandboxName, gpu) {
   step(4, TOTAL_STEPS, "Configuring inference (NIM)");
 
   let model = null;
-  let provider = "nvidia-nim";
+  let provider = "openrouter";
   let nimContainer = null;
 
   // Detect local inference options
@@ -372,6 +383,7 @@ async function setupNim(sandboxName, gpu) {
   if (EXPERIMENTAL && gpu && gpu.nimCapable) {
     options.push({ key: "nim", label: "Local NIM container (NVIDIA GPU) [experimental]" });
   }
+  options.push({ key: "openrouter", label: `OpenRouter (${defaultOpenRouterModel()})` });
   options.push({ key: "cloud", label: "NVIDIA Cloud API (build.nvidia.com)" });
   if (hasOllama || ollamaRunning) {
     options.push({ key: "ollama", label: `Ollama + DeepSolana (localhost:11434)${ollamaRunning ? " — running" : ""}` });
@@ -393,7 +405,7 @@ async function setupNim(sandboxName, gpu) {
     });
     console.log("");
 
-    const defaultIdx = options.findIndex((o) => o.key === "cloud") + 1;
+    const defaultIdx = options.findIndex((o) => o.key === "openrouter") + 1;
     const idx = await promptSelection(`  Choose [${defaultIdx}]: `, options.length, defaultIdx);
     const selected = options[idx];
 
@@ -429,6 +441,11 @@ async function setupNim(sandboxName, gpu) {
           provider = "vllm-local";
         }
       }
+    } else if (selected.key === "cloud") {
+      provider = "nvidia-nim";
+    } else if (selected.key === "openrouter") {
+      provider = "openrouter";
+      model = defaultOpenRouterModel();
     } else if (selected.key === "ollama") {
       if (!ollamaRunning) {
         console.log("  Starting Ollama...");
@@ -456,10 +473,14 @@ async function setupNim(sandboxName, gpu) {
       provider = "vllm-local";
       model = "vllm-local";
     }
-    // else: cloud — fall through to default below
+    // else: openrouter or cloud — fall through to defaults below
   }
 
-  if (provider === "nvidia-nim") {
+  if (provider === "openrouter") {
+    await ensureOpenRouterApiKey();
+    model = model || defaultOpenRouterModel();
+    console.log(`  Using OpenRouter with model: ${model}`);
+  } else if (provider === "nvidia-nim") {
     await ensureApiKey();
     model = model || "nvidia/nemotron-3-super-120b-a12b";
     console.log(`  Using NVIDIA Cloud API with model: ${model}`);
@@ -475,7 +496,21 @@ async function setupNim(sandboxName, gpu) {
 async function setupInference(sandboxName, model, provider) {
   step(5, TOTAL_STEPS, "Setting up inference provider");
 
-  if (provider === "nvidia-nim") {
+  if (provider === "openrouter") {
+    const modelName = model || defaultOpenRouterModel();
+    run(
+      `openshell provider create --name openrouter --type openai ` +
+      `--credential "OPENROUTER_API_KEY=${process.env.OPENROUTER_API_KEY}" ` +
+      `--config "OPENAI_BASE_URL=${OPENROUTER_ENDPOINT_URL}" 2>&1 || ` +
+      `openshell provider update openrouter --credential "OPENROUTER_API_KEY=${process.env.OPENROUTER_API_KEY}" ` +
+      `--config "OPENAI_BASE_URL=${OPENROUTER_ENDPOINT_URL}" 2>&1 || true`,
+      { ignoreError: true }
+    );
+    run(
+      `openshell inference set --no-verify --provider openrouter --model ${modelName} 2>/dev/null || true`,
+      { ignoreError: true }
+    );
+  } else if (provider === "nvidia-nim") {
     // Create nvidia-nim provider
     run(
       `openshell provider create --name nvidia-nim --type openai ` +
@@ -548,50 +583,61 @@ async function setupSolana(sandboxName) {
     }
   }
 
-  // RPC URL selection
-  console.log("");
-  console.log("  Solana RPC endpoint:");
-  solana.DEFAULT_RPC_OPTIONS.forEach((o, i) => {
-    console.log(`    ${i + 1}) ${o.label} — ${o.url || '(you provide)'}`);
-  });
-  console.log("");
-
-  const defaultRpcChoice =
-    (process.env.HELIUS_API_KEY || (existing && existing.heliusApiKey)) ? "3" : "1";
-  const rpcIdx = await promptSelection(
-    `  Choose RPC [${defaultRpcChoice}]: `,
-    solana.DEFAULT_RPC_OPTIONS.length,
-    parseInt(defaultRpcChoice, 10)
-  );
-  const selected = solana.DEFAULT_RPC_OPTIONS[rpcIdx];
-
-  let rpcUrl = selected.url;
+  const suppliedRpcUrl = getCredential("RPC_URL") || process.env.RPC_URL;
+  let selected;
+  let rpcUrl;
   let heliusApiKey = null;
-  if (selected.key === "helius") {
-    const detectedHeliusKey =
-      process.env.HELIUS_API_KEY ||
-      (existing && existing.heliusApiKey) ||
-      solana.extractHeliusApiKey(existing && existing.rpcUrl);
-    const heliusPrompt = detectedHeliusKey
-      ? `  Helius API key [saved ${detectedHeliusKey.slice(0, 6)}...]: `
-      : "  Helius API key: ";
-    const heliusKey = await prompt(heliusPrompt);
-    heliusApiKey = (heliusKey || detectedHeliusKey || "").trim();
-    if (!heliusApiKey) {
-      console.log("  ⚠ No Helius API key provided. Falling back to Solana Tracker RPC.");
-      rpcUrl = "https://rpc.solanatracker.io/public";
-      heliusApiKey = null;
-    } else {
-    rpcUrl = `https://mainnet.helius-rpc.com/?api-key=${heliusApiKey}`;
-    }
-  } else if (selected.key === "custom") {
-    rpcUrl = await prompt("  Custom RPC URL: ");
-  } else if (selected.key === "local") {
-    console.log("  Will use local test-validator (localhost:8899)");
-    // Check if solana-test-validator is installed
-    if (!solana.isSolanaCliInstalled()) {
-      console.log("  ⓘ solana-test-validator not found on host.");
-      console.log("    It's available inside the sandbox via Solana CLI tools.");
+
+  if (suppliedRpcUrl) {
+    selected = { key: "custom" };
+    rpcUrl = suppliedRpcUrl;
+    heliusApiKey = solana.extractHeliusApiKey(rpcUrl);
+    console.log(`  Using RPC_URL: ${rpcUrl}`);
+  } else {
+    // RPC URL selection
+    console.log("");
+    console.log("  Solana RPC endpoint:");
+    solana.DEFAULT_RPC_OPTIONS.forEach((o, i) => {
+      console.log(`    ${i + 1}) ${o.label} — ${o.url || '(you provide)'}`);
+    });
+    console.log("");
+
+    const defaultRpcChoice =
+      (process.env.HELIUS_API_KEY || (existing && existing.heliusApiKey)) ? "3" : "1";
+    const rpcIdx = await promptSelection(
+      `  Choose RPC [${defaultRpcChoice}]: `,
+      solana.DEFAULT_RPC_OPTIONS.length,
+      parseInt(defaultRpcChoice, 10)
+    );
+    selected = solana.DEFAULT_RPC_OPTIONS[rpcIdx];
+
+    rpcUrl = selected.url;
+    if (selected.key === "helius") {
+      const detectedHeliusKey =
+        process.env.HELIUS_API_KEY ||
+        (existing && existing.heliusApiKey) ||
+        solana.extractHeliusApiKey(existing && existing.rpcUrl);
+      const heliusPrompt = detectedHeliusKey
+        ? `  Helius API key [saved ${detectedHeliusKey.slice(0, 6)}...]: `
+        : "  Helius API key: ";
+      const heliusKey = await prompt(heliusPrompt);
+      heliusApiKey = (heliusKey || detectedHeliusKey || "").trim();
+      if (!heliusApiKey) {
+        console.log("  ⚠ No Helius API key provided. Falling back to Solana Tracker RPC.");
+        rpcUrl = "https://rpc.solanatracker.io/public";
+        heliusApiKey = null;
+      } else {
+        rpcUrl = `https://mainnet.helius-rpc.com/?api-key=${heliusApiKey}`;
+      }
+    } else if (selected.key === "custom") {
+      rpcUrl = await prompt("  Custom RPC URL: ");
+    } else if (selected.key === "local") {
+      console.log("  Will use local test-validator (localhost:8899)");
+      // Check if solana-test-validator is installed
+      if (!solana.isSolanaCliInstalled()) {
+        console.log("  ⓘ solana-test-validator not found on host.");
+        console.log("    It's available inside the sandbox via Solana CLI tools.");
+      }
     }
   }
 
@@ -698,6 +744,7 @@ async function setupSolana(sandboxName) {
   solana.saveSolanaConfig(config);
 
   // Set env so sandbox creation picks it up
+  process.env.RPC_URL = config.rpcUrl;
   process.env.SOLANA_RPC_URL = config.rpcUrl;
   if (config.wsUrl) process.env.SOLANA_WS_URL = config.wsUrl;
   if (config.heliusApiKey) process.env.HELIUS_API_KEY = config.heliusApiKey;
@@ -778,9 +825,17 @@ async function setupPolicies(sandboxName) {
   }
   // Solana is always suggested since we configure it in step 7
   const solConfig = solana.loadSolanaConfig();
-  if (solConfig || getCredential("SOLANA_RPC_URL") || process.env.SOLANA_RPC_URL) {
+  if (
+    solConfig ||
+    getCredential("RPC_URL") ||
+    getCredential("SOLANA_RPC_URL") ||
+    process.env.RPC_URL ||
+    process.env.SOLANA_RPC_URL
+  ) {
     suggestions.push("solana-rpc");
+    suggestions.push("phoenix-perps");
     console.log("  Auto-detected: Solana RPC configured → suggesting solana-rpc preset");
+    console.log("  Auto-detected: Solana RPC configured → suggesting phoenix-perps preset");
   }
   if (
     getCredential("AGENT_TOKEN_MINT_ADDRESS") || process.env.AGENT_TOKEN_MINT_ADDRESS ||
@@ -850,7 +905,8 @@ function printDashboard(sandboxName, model, provider) {
   const wallet = solana.getDefaultWallet();
 
   let providerLabel = provider;
-  if (provider === "nvidia-nim") providerLabel = "NVIDIA Cloud API";
+  if (provider === "openrouter") providerLabel = "OpenRouter";
+  else if (provider === "nvidia-nim") providerLabel = "NVIDIA Cloud API";
   else if (provider === "vllm-local") providerLabel = "Local vLLM";
 
   console.log("");

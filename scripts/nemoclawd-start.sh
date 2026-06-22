@@ -6,7 +6,8 @@
 # gateway inside the sandbox so the forwarded host port has a live upstream.
 #
 # Optional env:
-#   NVIDIA_API_KEY   API key for NVIDIA-hosted inference
+#   OPENROUTER_API_KEY  API key for OpenRouter-hosted inference
+#   OPENROUTER_MODEL    Model id, defaults to z-ai/glm-5.2
 #   CHAT_UI_URL      Browser origin that will access the forwarded dashboard
 
 set -euo pipefail
@@ -16,7 +17,10 @@ CHAT_UI_URL="${CHAT_UI_URL:-http://127.0.0.1:18789}"
 PUBLIC_PORT=18789
 WORKSPACE_ROOT="${HOME:-/sandbox}/.openclaw/workspace"
 PUMPFUN_ROOT="/opt/pump-fun"
-SOLANA_RPC_URL="${SOLANA_RPC_URL:-https://rpc.solanatracker.io/public}"
+SOLANA_RPC_URL="${SOLANA_RPC_URL:-${RPC_URL:-https://rpc.solanatracker.io/public}}"
+RPC_URL="${RPC_URL:-$SOLANA_RPC_URL}"
+PHOENIX_API_URL="${PHOENIX_API_URL:-https://perp-api.phoenix.trade}"
+OPENROUTER_MODEL="${OPENROUTER_MODEL:-z-ai/glm-5.2}"
 
 write_workspace_prompts() {
   mkdir -p "${WORKSPACE_ROOT}/pumpfun"
@@ -158,7 +162,7 @@ if os.path.exists(config_path):
     with open(config_path) as f:
         cfg = json.load(f)
 
-cfg.setdefault('agents', {}).setdefault('defaults', {}).setdefault('model', {})['primary'] = 'nvidia/nemotron-3-super-120b-a12b'
+cfg.setdefault('agents', {}).setdefault('defaults', {}).setdefault('model', {})['primary'] = os.environ.get('OPENROUTER_MODEL', 'z-ai/glm-5.2')
 
 chat_ui_url = os.environ.get('CHAT_UI_URL', 'http://127.0.0.1:18789')
 parsed = urlparse(chat_ui_url)
@@ -184,7 +188,7 @@ PYCFG
 }
 
 write_auth_profile() {
-  if [ -z "${NVIDIA_API_KEY:-}" ]; then
+  if [ -z "${OPENROUTER_API_KEY:-}" ]; then
     return
   fi
 
@@ -194,15 +198,55 @@ import os
 path = os.path.expanduser('~/.openclaw/agents/main/agent/auth-profiles.json')
 os.makedirs(os.path.dirname(path), exist_ok=True)
 json.dump({
-    'nvidia:manual': {
+    'openrouter:manual': {
         'type': 'api_key',
-        'provider': 'nvidia',
-        'keyRef': {'source': 'env', 'id': 'NVIDIA_API_KEY'},
-        'profileId': 'nvidia:manual',
+        'provider': 'openrouter',
+        'keyRef': {'source': 'env', 'id': 'OPENROUTER_API_KEY'},
+        'profileId': 'openrouter:manual',
     }
 }, open(path, 'w'))
 os.chmod(path, 0o600)
 PYAUTH
+}
+
+write_vulcan_config() {
+  python3 - <<'PYVULCAN'
+import os
+from pathlib import Path
+
+def toml_quote(value: str) -> str:
+    return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
+
+home = Path(os.environ.get('HOME', '/sandbox'))
+path = home / '.vulcan' / 'config.toml'
+path.parent.mkdir(parents=True, exist_ok=True)
+
+rpc_url = os.environ.get('RPC_URL') or os.environ.get('SOLANA_RPC_URL') or 'https://rpc.solanatracker.io/public'
+api_url = os.environ.get('PHOENIX_API_URL', 'https://perp-api.phoenix.trade')
+wallet_name = os.environ.get('VULCAN_WALLET_NAME', '')
+slippage_bps = os.environ.get('VULCAN_DEFAULT_SLIPPAGE_BPS', '50')
+
+lines = [
+    '[network]',
+    f'rpc_url = {toml_quote(rpc_url)}',
+    f'api_url = {toml_quote(api_url)}',
+    '',
+    '[wallet]',
+]
+if wallet_name:
+    lines.append(f'default = {toml_quote(wallet_name)}')
+lines += [
+    '',
+    '[trading]',
+    f'default_slippage_bps = {slippage_bps}',
+    'confirm_trades = true',
+    '',
+]
+
+path.write_text('\n'.join(lines))
+path.chmod(0o600)
+print(f'[phoenix] Vulcan config: {path}')
+PYVULCAN
 }
 
 print_dashboard_urls() {
@@ -296,10 +340,11 @@ PYAUTOPAIR
 
 echo 'Setting up NemoClawd...'
 openclaw doctor --fix > /dev/null 2>&1 || true
-openclaw models set nvidia/nemotron-3-super-120b-a12b > /dev/null 2>&1 || true
+openclaw models set "${OPENROUTER_MODEL}" > /dev/null 2>&1 || true
 write_auth_profile
 export CHAT_UI_URL PUBLIC_PORT
 fix_openclaw_config
+write_vulcan_config
 write_workspace_prompts
 
 # ── Solana CLI configuration ──────────────────────────────────────

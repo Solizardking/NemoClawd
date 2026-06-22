@@ -30,13 +30,13 @@ No restart is required.
 
 ## Switch to a Different Model
 
-Set the provider to `nvidia-nim` and specify a model from [build.nvidia.com](https://build.nvidia.com):
+Set the provider to `openrouter` and specify the default model:
 
 ```console
-$ openshell inference set --provider nvidia-nim --model nvidia/nemotron-3-super-120b-a12b
+$ openshell inference set --provider openrouter --model z-ai/glm-5.2
 ```
 
-This requires the `NVIDIA_API_KEY` environment variable.
+This requires the `OPENROUTER_API_KEY` environment variable.
 The `nemoclawd onboard` command stores this key in `~/.nemoclawd/credentials.json` on first run.
 
 ## Verify the Active Model
@@ -57,7 +57,8 @@ The output includes the active provider, model, and endpoint.
 
 ## Available Models
 
-The following table lists the models registered with the `nvidia-nim` provider.
+The default `openrouter` provider registers `z-ai/glm-5.2`.
+The following table lists additional models registered with the `nvidia-nim` provider.
 You can switch to any of these models at runtime.
 
 | Model ID | Label | Context Window | Max Output |

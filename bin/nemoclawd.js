@@ -10,6 +10,7 @@ const os = require("os");
 const { ROOT, SCRIPTS, run, runCapture } = require("./lib/runner");
 const {
   ensureApiKey,
+  ensureOpenRouterApiKey,
   ensureGithubToken,
   getCredential,
   isRepoPrivate,
@@ -285,13 +286,18 @@ function resolveSandboxName(preferredName) {
 function buildSolanaRuntimeEnv() {
   const solConfig = solana.loadSolanaConfig() || {};
   const wallet = solana.getDefaultWallet();
-  const defaultRpc = getCredential("SOLANA_RPC_URL") || solana.getSolanaRpcUrl();
+  const defaultRpc =
+    getCredential("RPC_URL") ||
+    getCredential("SOLANA_RPC_URL") ||
+    solana.getSolanaRpcUrl();
   const defaultWs =
+    getCredential("RPC_WS_URL") ||
     getCredential("SOLANA_WS_URL") ||
     solana.getSolanaWsUrl() ||
     deriveWebsocketUrl(defaultRpc);
 
   return {
+    RPC_URL: defaultRpc,
     SOLANA_RPC_URL: defaultRpc,
     NEXT_PUBLIC_SOLANA_RPC_URL:
       getCredential("NEXT_PUBLIC_SOLANA_RPC_URL") ||
@@ -312,6 +318,27 @@ function buildSolanaRuntimeEnv() {
   };
 }
 
+function buildPhoenixRuntimeEnv() {
+  const baseEnv = buildSolanaRuntimeEnv();
+  const walletName = getCredential("VULCAN_WALLET_NAME") || process.env.VULCAN_WALLET_NAME;
+  const walletPassword = getCredential("VULCAN_WALLET_PASSWORD") || process.env.VULCAN_WALLET_PASSWORD;
+
+  return {
+    ...baseEnv,
+    RPC_URL: getCredential("RPC_URL") || process.env.RPC_URL || baseEnv.SOLANA_RPC_URL,
+    PHOENIX_API_URL:
+      getCredential("PHOENIX_API_URL") ||
+      process.env.PHOENIX_API_URL ||
+      "https://perp-api.phoenix.trade",
+    VULCAN_WALLET_NAME: walletName,
+    VULCAN_WALLET_PASSWORD: walletPassword,
+    VULCAN_DEFAULT_SLIPPAGE_BPS:
+      getCredential("VULCAN_DEFAULT_SLIPPAGE_BPS") ||
+      process.env.VULCAN_DEFAULT_SLIPPAGE_BPS ||
+      "50",
+  };
+}
+
 // ── Commands ─────────────────────────────────────────────────────
 
 async function onboard() {
@@ -324,7 +351,7 @@ async function setup() {
   console.log("  ⚠  `nemoclawd setup` is deprecated. Use `nemoclawd onboard` instead.");
   console.log("     Running legacy setup.sh for backwards compatibility...");
   console.log("");
-  await ensureApiKey();
+  await ensureOpenRouterApiKey();
   run(`bash "${SCRIPTS}/setup.sh"`);
 }
 
@@ -343,7 +370,7 @@ async function deploy(instanceName) {
     console.error("    nemoclawd deploy nemoclawd-test");
     process.exit(1);
   }
-  await ensureApiKey();
+  await ensureOpenRouterApiKey();
   if (isRepoPrivate("NVIDIA/OpenShell")) {
     await ensureGithubToken();
   }
@@ -394,7 +421,17 @@ async function deploy(instanceName) {
   run(`ssh -o StrictHostKeyChecking=no -o LogLevel=ERROR ${name} 'mkdir -p /home/ubuntu/nemoclawd'`);
   run(`rsync -az --delete --exclude node_modules --exclude .git --exclude src -e "ssh -o StrictHostKeyChecking=no -o LogLevel=ERROR" "${ROOT}/scripts" "${ROOT}/Dockerfile" "${ROOT}/nemoclawd" "${ROOT}/nemoclawd-blueprint" "${ROOT}/bin" "${ROOT}/package.json" ${name}:/home/ubuntu/nemoclawd/`);
 
-  const envLines = [`NVIDIA_API_KEY=${process.env.NVIDIA_API_KEY}`];
+  const envLines = [
+    `OPENROUTER_API_KEY=${process.env.OPENROUTER_API_KEY}`,
+    `OPENROUTER_MODEL=${process.env.OPENROUTER_MODEL || "z-ai/glm-5.2"}`,
+  ];
+  const phoenixEnv = buildPhoenixRuntimeEnv();
+  if (phoenixEnv.RPC_URL) envLines.push(`RPC_URL=${phoenixEnv.RPC_URL}`);
+  if (phoenixEnv.SOLANA_RPC_URL) envLines.push(`SOLANA_RPC_URL=${phoenixEnv.SOLANA_RPC_URL}`);
+  if (phoenixEnv.PHOENIX_API_URL) envLines.push(`PHOENIX_API_URL=${phoenixEnv.PHOENIX_API_URL}`);
+  if (phoenixEnv.VULCAN_WALLET_NAME) envLines.push(`VULCAN_WALLET_NAME=${phoenixEnv.VULCAN_WALLET_NAME}`);
+  if (phoenixEnv.VULCAN_WALLET_PASSWORD) envLines.push(`VULCAN_WALLET_PASSWORD=${phoenixEnv.VULCAN_WALLET_PASSWORD}`);
+  if (process.env.NVIDIA_API_KEY) envLines.push(`NVIDIA_API_KEY=${process.env.NVIDIA_API_KEY}`);
   const ghToken = process.env.GITHUB_TOKEN;
   if (ghToken) envLines.push(`GITHUB_TOKEN=${ghToken}`);
   const tgToken = getCredential("TELEGRAM_BOT_TOKEN");
@@ -419,7 +456,7 @@ async function deploy(instanceName) {
 }
 
 async function start() {
-  await ensureApiKey();
+  await ensureOpenRouterApiKey();
   run(`bash "${SCRIPTS}/start-services.sh"`);
 }
 
@@ -672,6 +709,28 @@ function sandboxWebsocketServer(sandboxName) {
   runSandboxScript(sandboxName, envValues, "nemoclawd-websocket-server");
 }
 
+function sandboxPhoenixPerps(sandboxName, actionArgs = []) {
+  const envValues = buildPhoenixRuntimeEnv();
+  const subcommand = actionArgs[0] || "health";
+  const liveCommands = new Set(["mcp-live"]);
+
+  if (liveCommands.has(subcommand)) {
+    validateSandboxEnv(
+      "Phoenix live trading via Vulcan",
+      envValues,
+      ["VULCAN_WALLET_NAME", "VULCAN_WALLET_PASSWORD"],
+      "Run `vulcan setup` first, fund collateral intentionally, and use a dedicated wallet."
+    );
+  }
+
+  const quotedArgs = actionArgs.map(shellQuote).join(" ");
+  runSandboxScript(
+    sandboxName,
+    envValues,
+    `nemoclawd-phoenix-perps${quotedArgs ? ` ${quotedArgs}` : ""}`
+  );
+}
+
 function sandboxSolanaStack(sandboxName, overrides = {}) {
   const envValues = {
     ...buildSolanaRuntimeEnv(),
@@ -814,6 +873,7 @@ async function quickStartSolana(actionArgs = []) {
   console.log(`    nemoclawd ${sb.name} payment-app      Payment-gated agent`);
   console.log(`    nemoclawd ${sb.name} swarm-bot        PumpFun swarm dashboard`);
   console.log(`    nemoclawd ${sb.name} websocket-server PumpFun launch relay`);
+  console.log(`    nemoclawd ${sb.name} phoenix-perps    Phoenix perps via Vulcan`);
   console.log(`    nemoclawd ${sb.name} status           Show full status`);
   console.log("");
   console.log("  Quick connect:");
@@ -1102,6 +1162,7 @@ function help() {
     nemoclawd <name> payment-app      Payment-gated agent app
     nemoclawd <name> swarm-bot        Pump-Fun swarm dashboard
     nemoclawd <name> websocket-server Pump-Fun WebSocket relay
+    nemoclawd <name> phoenix-perps    Phoenix perps via Vulcan CLI/MCP
     nemoclawd <name> status           Sandbox + Solana + wallet status
     nemoclawd <name> logs [--follow]  View sandbox logs
     nemoclawd <name> destroy          Stop NIM + delete sandbox
@@ -1120,8 +1181,9 @@ function help() {
   Inside the sandbox you get:
     helius-cli, plus Solana CLI tools when the target architecture supports them
     Pump-Fun SDK, 43 DeFi agent personas, Privy wallet skill
+    Phoenix perpetual futures through Vulcan, using RPC_URL/SOLANA_RPC_URL
 
-  Default model: 8bit/DeepSolana (via Ollama, auto-pulled on onboard)
+  Default model: z-ai/glm-5.2 (via OpenRouter; override with OPENROUTER_MODEL)
 
   Credentials: ~/.nemoclawd/ (mode 600)
   Wallet keys: managed by Privy — never stored locally
@@ -1177,6 +1239,7 @@ const [cmd, ...args] = process.argv.slice(2);
       case "payment-app": sandboxPaymentApp(cmd); break;
       case "swarm-bot":   sandboxSwarmBot(cmd); break;
       case "websocket-server": sandboxWebsocketServer(cmd); break;
+      case "phoenix-perps": sandboxPhoenixPerps(cmd, actionArgs); break;
       case "status":      sandboxStatus(cmd); break;
       case "logs":        sandboxLogs(cmd, actionArgs.includes("--follow")); break;
       case "policy-add":  await sandboxPolicyAdd(cmd); break;
@@ -1184,7 +1247,7 @@ const [cmd, ...args] = process.argv.slice(2);
       case "destroy":     sandboxDestroy(cmd); break;
       default:
         console.error(`  Unknown action: ${action}`);
-        console.error(`  Valid actions: connect, solana-stack, solana-agent, solana-bridge, telegram-bot, payment-app, swarm-bot, websocket-server, status, logs, policy-add, policy-list, destroy`);
+        console.error(`  Valid actions: connect, solana-stack, solana-agent, solana-bridge, telegram-bot, payment-app, swarm-bot, websocket-server, phoenix-perps, status, logs, policy-add, policy-list, destroy`);
         process.exit(1);
     }
     return;

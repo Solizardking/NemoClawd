@@ -14,7 +14,7 @@
 #
 # Prerequisites:
 #   - NemoClawd setup complete (./scripts/setup.sh)
-#   - NVIDIA_API_KEY in environment
+#   - OPENROUTER_API_KEY in environment
 #
 # Suggested prompts that trigger the approval flow:
 #
@@ -37,13 +37,15 @@
 #
 #   Terminal 2 (Agent):
 #     openshell sandbox connect nemoclawd
-#     export NVIDIA_API_KEY=nvapi-...
+#     export OPENROUTER_API_KEY=sk-or-...
+#     export OPENROUTER_MODEL=z-ai/glm-5.2
 #     nemoclawd-start
 #     openclaw agent --agent main --local --session-id live
 
 set -euo pipefail
 
-[ -n "${NVIDIA_API_KEY:-}" ] || { echo "NVIDIA_API_KEY required"; exit 1; }
+[ -n "${OPENROUTER_API_KEY:-}" ] || { echo "OPENROUTER_API_KEY required"; exit 1; }
+OPENROUTER_MODEL="${OPENROUTER_MODEL:-z-ai/glm-5.2}"
 
 echo ""
 echo "  ┌─────────────────────────────────────────────────────┐"
@@ -69,7 +71,8 @@ if ! command -v tmux > /dev/null 2>&1; then
   echo ""
   echo "  Terminal 2 (Agent):"
   echo "    openshell sandbox connect nemoclawd"
-  echo "    export NVIDIA_API_KEY=$NVIDIA_API_KEY"
+  echo "    export OPENROUTER_API_KEY=$OPENROUTER_API_KEY"
+  echo "    export OPENROUTER_MODEL=$OPENROUTER_MODEL"
   echo "    nemoclawd-start"
   echo "    openclaw agent --agent main --local --session-id live"
   exit 0
@@ -85,7 +88,7 @@ tmux new-session -d -s "$SESSION" -x 200 -y 50 "openshell term"
 
 # Split right pane for the agent
 tmux split-window -h -t "$SESSION" \
-  "openshell sandbox connect nemoclawd -- bash -c 'export NVIDIA_API_KEY=$NVIDIA_API_KEY && nemoclawd-start openclaw agent --agent main --local --session-id live'"
+  "openshell sandbox connect nemoclawd -- bash -c 'export OPENROUTER_API_KEY=$OPENROUTER_API_KEY OPENROUTER_MODEL=$OPENROUTER_MODEL && nemoclawd-start openclaw agent --agent main --local --session-id live'"
 
 # Even split
 tmux select-layout -t "$SESSION" even-horizontal

@@ -27,6 +27,7 @@ NemoClawd is in active development and follows a frequent release cadence. Use t
 - Renamed local package, CLI, plugin, MCP server, blueprint paths, scripts, state directories, and docs to the `nemoclawd` spelling.
 - Updated the OpenClaw runtime pin to `2026.6.9` and aligned OpenShell installation docs with NVIDIA's current upstream installer and `uv tool install -U openshell` path.
 - Synced docs with NVIDIA upstream v0.0.64 themes: restore safety for custom policy presets, more stable OpenClaw onboarding, chat-completions fallback for NVIDIA/NIM-compatible routes, and messaging setup recovery.
+- Added Phoenix perpetual futures support through the official Vulcan CLI, using `RPC_URL` / `SOLANA_RPC_URL`, a `phoenix-perps` policy preset, paper-safe helpers, live preflight, and gated live-capable MCP startup.
 
 | Resource | Description |
 |---|---|

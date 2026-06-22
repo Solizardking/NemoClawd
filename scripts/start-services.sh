@@ -80,7 +80,8 @@ do_stop() {
 }
 
 do_start() {
-  [ -n "${NVIDIA_API_KEY:-}" ] || fail "NVIDIA_API_KEY required"
+  [ -n "${OPENROUTER_API_KEY:-}" ] || fail "OPENROUTER_API_KEY required"
+  export OPENROUTER_MODEL="${OPENROUTER_MODEL:-z-ai/glm-5.2}"
   [ -z "${TELEGRAM_BOT_TOKEN:-}" ] && warn "TELEGRAM_BOT_TOKEN not set — Telegram bridge will not start."
   command -v node > /dev/null || fail "node not found. Install Node.js first."
 

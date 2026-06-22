@@ -2,7 +2,8 @@
 # Brev VM bootstrap — installs prerequisites then runs setup.sh.
 #
 # Run on a fresh Brev VM:
-#   export NVIDIA_API_KEY=nvapi-...
+#   export OPENROUTER_API_KEY=sk-or-...
+#   export OPENROUTER_MODEL=z-ai/glm-5.2
 #   ./scripts/brev-setup.sh
 
 set -euo pipefail
@@ -13,7 +14,11 @@ warn() { echo -e "${YELLOW}[brev]${NC} $1"; }
 fail() { echo -e "${RED}[brev]${NC} $1"; exit 1; }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-[ -n "${NVIDIA_API_KEY:-}" ] || fail "NVIDIA_API_KEY not set"
+[ -n "${OPENROUTER_API_KEY:-}" ] || fail "OPENROUTER_API_KEY not set"
+OPENROUTER_MODEL="${OPENROUTER_MODEL:-z-ai/glm-5.2}"
+SOLANA_RPC_URL="${SOLANA_RPC_URL:-${RPC_URL:-https://rpc.solanatracker.io/public}}"
+RPC_URL="${RPC_URL:-$SOLANA_RPC_URL}"
+PHOENIX_API_URL="${PHOENIX_API_URL:-https://perp-api.phoenix.trade}"
 
 export NEEDRESTART_MODE=a DEBIAN_FRONTEND=noninteractive
 
@@ -108,5 +113,9 @@ fi
 
 # --- 5. Run setup.sh ---
 info "Running setup.sh..."
-export NVIDIA_API_KEY
+export OPENROUTER_API_KEY OPENROUTER_MODEL
+export RPC_URL SOLANA_RPC_URL PHOENIX_API_URL
+[ -n "${VULCAN_WALLET_NAME:-}" ] && export VULCAN_WALLET_NAME
+[ -n "${VULCAN_WALLET_PASSWORD:-}" ] && export VULCAN_WALLET_PASSWORD
+[ -n "${NVIDIA_API_KEY:-}" ] && export NVIDIA_API_KEY
 exec sg docker -c "bash $SCRIPT_DIR/setup.sh"

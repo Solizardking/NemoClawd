@@ -26,7 +26,7 @@ status: published
 ```
 
 NemoClawd is the OpenClaw plugin for [NVIDIA OpenShell](https://github.com/NVIDIA/OpenShell).
-It runs OpenClaw inside a sandboxed environment with NVIDIA cloud inference, such as Nemotron 3 Super 120B through [build.nvidia.com](https://build.nvidia.com).
+It runs OpenClaw inside a sandboxed environment with OpenRouter inference, defaulting to `z-ai/glm-5.2`.
 The sandbox enforces strict network policies and operator-controlled egress approval.
 
 ## Get Started
@@ -128,7 +128,7 @@ CLI commands for launching, connecting, monitoring, and managing sandboxes.
 :link: reference/inference-profiles
 :link-type: doc
 
-NVIDIA cloud inference configuration and available models.
+OpenRouter, NVIDIA, and local inference configuration.
 
 +++
 {bdg-secondary}`Reference`

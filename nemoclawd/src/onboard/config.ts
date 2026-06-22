@@ -6,7 +6,14 @@ import { join } from "node:path";
 
 const CONFIG_DIR = join(process.env.HOME ?? "/tmp", ".nemoclawd");
 
-export type EndpointType = "build" | "ncp" | "nim-local" | "vllm" | "ollama" | "custom";
+export type EndpointType =
+  | "openrouter"
+  | "build"
+  | "ncp"
+  | "nim-local"
+  | "vllm"
+  | "ollama"
+  | "custom";
 
 export interface NemoClawdOnboardConfig {
   endpointType: EndpointType;

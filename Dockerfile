@@ -41,6 +41,11 @@ RUN addgroup -S sandbox && adduser -S -G sandbox -h /sandbox sandbox \
 # Install OpenClaw CLI
 RUN npm install -g openclaw@2026.6.9
 
+# Install Vulcan CLI for Phoenix perpetual futures.
+RUN VULCAN_INSTALL_DIR=/usr/local/bin \
+    sh -c "$(curl -fsSL https://github.com/Ellipsis-Labs/vulcan-cli/releases/latest/download/install.sh)" \
+    && vulcan version
+
 # Install PyYAML for blueprint runner
 RUN pip3 install --break-system-packages pyyaml
 
@@ -101,6 +106,7 @@ COPY scripts/nemoclawd-swarm-bot.sh      /usr/local/bin/nemoclawd-swarm-bot
 COPY scripts/nemoclawd-websocket-server.sh /usr/local/bin/nemoclawd-websocket-server
 COPY scripts/nemoclawd-solana-bridge.sh  /usr/local/bin/nemoclawd-solana-bridge
 COPY scripts/nemoclawd-solana-stack.sh   /usr/local/bin/nemoclawd-solana-stack
+COPY scripts/nemoclawd-phoenix-perps.sh  /usr/local/bin/nemoclawd-phoenix-perps
 RUN chmod +x \
     /usr/local/bin/nemoclawd-start \
     /usr/local/bin/nemoclawd-solana-agent \
@@ -109,7 +115,8 @@ RUN chmod +x \
     /usr/local/bin/nemoclawd-swarm-bot \
     /usr/local/bin/nemoclawd-websocket-server \
     /usr/local/bin/nemoclawd-solana-bridge \
-    /usr/local/bin/nemoclawd-solana-stack
+    /usr/local/bin/nemoclawd-solana-stack \
+    /usr/local/bin/nemoclawd-phoenix-perps
 
 RUN npm install -g helius-cli 2>/dev/null || echo 'WARN: helius-cli install skipped'
 
@@ -118,6 +125,7 @@ USER sandbox
 
 RUN mkdir -p /sandbox/.openclaw/agents/main/agent \
     && mkdir -p /sandbox/.openclaw/workspace/skills/privy \
+    && mkdir -p /sandbox/.openclaw/workspace/skills/phoenix-perps \
     && mkdir -p /sandbox/.nemoclawd/wallets \
     && chmod 700 /sandbox/.openclaw \
     && chmod 700 /sandbox/.nemoclawd/wallets
@@ -151,17 +159,50 @@ curl -X POST https://auth.privy.io/api/v1/wallets \
 - Only fund wallets with amounts you can afford to lose
 PRIVY_SKILL
 
-# Write openclaw.json: NVIDIA provider via OpenShell inference routing
+RUN cat > /sandbox/.openclaw/workspace/skills/phoenix-perps/SKILL.md <<'PHOENIX_SKILL'
+---
+name: phoenix-perps-vulcan
+description: |
+  Use the official Vulcan CLI for Phoenix perpetual futures on Solana.
+  Supports market data, paper trading, live preflight, and live-capable MCP.
+---
+
+## Phoenix Perps Through Vulcan
+
+Use `nemoclawd-phoenix-perps` so Vulcan reads the sandbox RPC configuration:
+
+```bash
+nemoclawd-phoenix-perps health
+nemoclawd-phoenix-perps markets
+nemoclawd-phoenix-perps market SOL
+nemoclawd-phoenix-perps paper-init 10000
+nemoclawd-phoenix-perps preflight "$VULCAN_WALLET_NAME"
+```
+
+Live trading requires an intentionally configured Vulcan wallet, trader
+registration, collateral, `VULCAN_WALLET_NAME`, `VULCAN_WALLET_PASSWORD`, and
+explicit confirmation. Never print wallet passwords or private keys. Never place
+or modify live orders without explicit user approval.
+
+For MCP:
+
+```bash
+nemoclawd-phoenix-perps mcp       # read-only / paper-safe
+nemoclawd-phoenix-perps mcp-live  # live-capable; requires wallet env
+```
+PHOENIX_SKILL
+
+# Write openclaw.json: OpenRouter provider via OpenShell inference routing
 RUN python3 -c "\
 import json, os; \
 config = { \
-    'agents': {'defaults': {'model': {'primary': 'nvidia/nemotron-3-super-120b-a12b'}}}, \
+    'agents': {'defaults': {'model': {'primary': os.environ.get('OPENROUTER_MODEL', 'z-ai/glm-5.2')}}}, \
     'models': {'mode': 'merge', 'providers': { \
-        'nvidia': { \
-            'baseUrl': 'https://integrate.api.nvidia.com/v1', \
-            'apiKey': 'env:NVIDIA_API_KEY', \
+        'openrouter': { \
+            'baseUrl': 'https://openrouter.ai/api/v1', \
+            'apiKey': 'env:OPENROUTER_API_KEY', \
             'api': 'openai-completions', \
-            'models': [{'id': 'nemotron-3-super-120b-a12b', 'name': 'NVIDIA Nemotron 3 Super 120B', 'reasoning': True, 'input': ['text'], 'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0}, 'contextWindow': 131072, 'maxTokens': 8192}] \
+            'models': [{'id': 'z-ai/glm-5.2', 'name': 'OpenRouter z-ai/glm-5.2', 'reasoning': True, 'input': ['text'], 'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0}, 'contextWindow': 131072, 'maxTokens': 8192}] \
         } \
     }} \
 }; \

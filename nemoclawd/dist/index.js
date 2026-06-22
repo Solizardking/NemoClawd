@@ -6,12 +6,13 @@ exports.getPluginConfig = getPluginConfig;
 exports.default = register;
 const cli_js_1 = require("./cli.js");
 const slash_js_1 = require("./commands/slash.js");
+const defaults_js_1 = require("./defaults.js");
 const config_js_1 = require("./onboard/config.js");
 const DEFAULT_PLUGIN_CONFIG = {
     blueprintVersion: "latest",
     blueprintRegistry: "ghcr.io/x402agent/nemoclawd-blueprint",
     sandboxName: "openclaw",
-    inferenceProvider: "nvidia",
+    inferenceProvider: defaults_js_1.OPENROUTER_PROVIDER_NAME,
 };
 function getPluginConfig(api) {
     const raw = api.pluginConfig ?? {};
@@ -45,7 +46,34 @@ function register(api) {
     api.registerCli((cliCtx) => {
         (0, cli_js_1.registerCliCommands)(cliCtx, api);
     }, { commands: ["nemoclawd"] });
-    // 3. Register nvidia-nim provider — use onboard config if available
+    // 3. Register OpenRouter as the default cloud provider.
+    const defaultOpenRouterModel = (0, defaults_js_1.resolveDefaultOpenRouterModel)();
+    api.registerProvider({
+        id: defaults_js_1.OPENROUTER_PROVIDER_NAME,
+        label: "OpenRouter",
+        docsPath: "https://openrouter.ai/docs",
+        aliases: ["openrouter", "or"],
+        envVars: [defaults_js_1.OPENROUTER_CREDENTIAL_ENV, "OPENROUTER_MODEL"],
+        models: {
+            chat: [
+                {
+                    id: defaultOpenRouterModel,
+                    label: `OpenRouter default (${defaultOpenRouterModel})`,
+                    contextWindow: 131072,
+                    maxOutput: 8192,
+                },
+            ],
+        },
+        auth: [
+            {
+                type: "bearer",
+                envVar: defaults_js_1.OPENROUTER_CREDENTIAL_ENV,
+                headerName: "Authorization",
+                label: `OpenRouter API Key (${defaults_js_1.OPENROUTER_CREDENTIAL_ENV})`,
+            },
+        ],
+    });
+    // 4. Register nvidia-nim provider — use onboard config if available.
     const onboardCfg = (0, config_js_1.loadOnboardConfig)();
     const providerCredentialEnv = onboardCfg?.credentialEnv ?? "NVIDIA_API_KEY";
     const providerLabel = onboardCfg
@@ -94,8 +122,8 @@ function register(api) {
             },
         ],
     });
-    const bannerEndpoint = onboardCfg?.endpointType ?? "build.nvidia.com";
-    const bannerModel = onboardCfg?.model ?? "nvidia/nemotron-3-super-120b-a12b";
+    const bannerEndpoint = onboardCfg?.endpointType ?? defaults_js_1.OPENROUTER_ENDPOINT_URL;
+    const bannerModel = onboardCfg?.model ?? defaultOpenRouterModel;
     api.logger.info("");
     api.logger.info("  ┌─────────────────────────────────────────────────────┐");
     api.logger.info("  │  NemoClawd registered                                │");

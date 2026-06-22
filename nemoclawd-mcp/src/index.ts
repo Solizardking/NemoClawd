@@ -6,17 +6,21 @@
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
   ListResourcesRequestSchema,
   ListPromptsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { createServer } from "node:http";
 
 // Environment
 const XAI_API_KEY = process.env.XAI_API_KEY || "";
 const HELIUS_API_KEY = process.env.HELIUS_API_KEY || "";
 const HELIUS_RPC_URL = process.env.HELIUS_RPC_URL || `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
+const BIRDEYE_API_KEY = process.env.BIRDEYE_API_KEY || "";
 
 // Grok API base
 const GROK_API_BASE = "https://api.x.ai/v1";
@@ -412,6 +416,12 @@ const TOOLS = [
 // HELPER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════════
 
+type JsonObject = Record<string, any>;
+
+async function readJsonObject(response: Response): Promise<JsonObject> {
+  return (await response.json()) as JsonObject;
+}
+
 async function heliusRpc<T = unknown>(
   method: string,
   params: unknown[] = []
@@ -426,7 +436,7 @@ async function heliusRpc<T = unknown>(
       params,
     }),
   });
-  const data = await response.json();
+  const data = (await response.json()) as { result: T };
   return data.result;
 }
 
@@ -448,8 +458,8 @@ async function grokChat(
     body: JSON.stringify({ model, messages, stream }),
   });
 
-  const data = await response.json();
-  return stream ? data : data.choices[0]?.message?.content || "";
+  const data = await readJsonObject(response);
+  return stream ? JSON.stringify(data) : data.choices?.[0]?.message?.content || "";
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -464,7 +474,7 @@ async function handleToolCall(name: string, args: Record<string, unknown>) {
       const response = await fetch(
         `https://api.birdeye.so/public/v1/token/${token}?api_key=${BIRDEYE_API_KEY || ""}`
       );
-      const data = await response.json();
+      const data = await readJsonObject(response);
       return {
         content: [
           {
@@ -546,7 +556,7 @@ async function handleToolCall(name: string, args: Record<string, unknown>) {
       const response = await fetch(
         "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
       );
-      const data = await response.json();
+      const data = await readJsonObject(response);
       return {
         content: [
           {
@@ -850,16 +860,33 @@ server.setRequestHandler(ListPromptsRequestSchema, async () => {
   return { prompts: [] };
 });
 
-// Start server
-const transport = process.argv.includes("--http")
-  ? { type: "http" as const }
-  : { type: "stdio" as const };
+async function main() {
+  if (process.argv.includes("--http")) {
+    const port = Number.parseInt(process.env.PORT || "3000", 10);
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+    });
+    await server.connect(transport);
 
-server.connect(transport.type === "http"
-  ? new (await import("@modelcontextprotocol/sdk/server/http.js")).HttpServer(server, { port: 3000 })
-  : new (await import("@modelcontextprotocol/sdk/server/stdio.js")).StdioServer(server)
-);
+    createServer((req, res) => {
+      if (req.url && !req.url.startsWith("/mcp")) {
+        res.writeHead(404).end("Not found");
+        return;
+      }
+      void transport.handleRequest(req, res);
+    }).listen(port, () => {
+      console.error(`nemoClawd MCP Server running on http://127.0.0.1:${port}/mcp`);
+    });
+    return;
+  }
 
-console.error("nemoClawd MCP Server running...");
+  await server.connect(new StdioServerTransport());
+  console.error("nemoClawd MCP Server running...");
+}
+
+void main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
 
 export { server };

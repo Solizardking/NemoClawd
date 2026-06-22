@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Test inference routing through the OpenShell gateway (local vLLM / Ollama)
-echo '{"model":"nvidia/nemotron-3-nano-30b-a3b","messages":[{"role":"user","content":"say hello"}]}' > /tmp/req.json
+MODEL="${OPENROUTER_MODEL:-z-ai/glm-5.2}"
+printf '{"model":"%s","messages":[{"role":"user","content":"say hello"}]}\n' "$MODEL" > /tmp/req.json
 curl -s https://inference.local/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d @/tmp/req.json

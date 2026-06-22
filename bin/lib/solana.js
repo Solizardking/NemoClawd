@@ -61,6 +61,7 @@ function saveSolanaConfig(config) {
 function getSolanaRpcUrl() {
   const config = loadSolanaConfig();
   return (
+    process.env.RPC_URL ||
     process.env.SOLANA_RPC_URL ||
     (config && config.rpcUrl) ||
     "https://rpc.solanatracker.io/public"
@@ -70,6 +71,7 @@ function getSolanaRpcUrl() {
 function getSolanaWsUrl() {
   const config = loadSolanaConfig();
   return (
+    process.env.RPC_WS_URL ||
     process.env.SOLANA_WS_URL ||
     (config && config.wsUrl) ||
     deriveSolanaWsUrl(getSolanaRpcUrl())
@@ -81,7 +83,7 @@ function getHeliusApiKey() {
   return (
     process.env.HELIUS_API_KEY ||
     (config && config.heliusApiKey) ||
-    extractHeliusApiKey(getSolanaRpcUrl())
+    extractHeliusApiKey(process.env.HELIUS_RPC_URL || getSolanaRpcUrl())
   );
 }
 

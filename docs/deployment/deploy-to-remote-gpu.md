@@ -26,7 +26,7 @@ The deploy command provisions the VM, installs dependencies, and connects you to
 ## Prerequisites
 
 - The [Brev CLI](https://brev.nvidia.com) installed and authenticated.
-- An NVIDIA API key from [build.nvidia.com](https://build.nvidia.com).
+- An OpenRouter API key from [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys).
 - NemoClawd installed locally. Install with `npm install -g @mawdbotsonsolana/nemoclawd`.
 
 ## Deploy the Instance

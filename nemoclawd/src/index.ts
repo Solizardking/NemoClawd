@@ -14,6 +14,12 @@
 import type { Command } from "commander";
 import { registerCliCommands } from "./cli.js";
 import { handleSlashCommand } from "./commands/slash.js";
+import {
+  OPENROUTER_CREDENTIAL_ENV,
+  OPENROUTER_ENDPOINT_URL,
+  OPENROUTER_PROVIDER_NAME,
+  resolveDefaultOpenRouterModel,
+} from "./defaults.js";
 import { loadOnboardConfig } from "./onboard/config.js";
 
 // ---------------------------------------------------------------------------
@@ -147,7 +153,7 @@ const DEFAULT_PLUGIN_CONFIG: NemoClawdConfig = {
   blueprintVersion: "latest",
   blueprintRegistry: "ghcr.io/x402agent/nemoclawd-blueprint",
   sandboxName: "openclaw",
-  inferenceProvider: "nvidia",
+  inferenceProvider: OPENROUTER_PROVIDER_NAME,
 };
 
 export function getPluginConfig(api: OpenClawPluginApi): NemoClawdConfig {
@@ -193,7 +199,35 @@ export default function register(api: OpenClawPluginApi): void {
     { commands: ["nemoclawd"] },
   );
 
-  // 3. Register nvidia-nim provider — use onboard config if available
+  // 3. Register OpenRouter as the default cloud provider.
+  const defaultOpenRouterModel = resolveDefaultOpenRouterModel();
+  api.registerProvider({
+    id: OPENROUTER_PROVIDER_NAME,
+    label: "OpenRouter",
+    docsPath: "https://openrouter.ai/docs",
+    aliases: ["openrouter", "or"],
+    envVars: [OPENROUTER_CREDENTIAL_ENV, "OPENROUTER_MODEL"],
+    models: {
+      chat: [
+        {
+          id: defaultOpenRouterModel,
+          label: `OpenRouter default (${defaultOpenRouterModel})`,
+          contextWindow: 131072,
+          maxOutput: 8192,
+        },
+      ],
+    },
+    auth: [
+      {
+        type: "bearer",
+        envVar: OPENROUTER_CREDENTIAL_ENV,
+        headerName: "Authorization",
+        label: `OpenRouter API Key (${OPENROUTER_CREDENTIAL_ENV})`,
+      },
+    ],
+  });
+
+  // 4. Register nvidia-nim provider — use onboard config if available.
   const onboardCfg = loadOnboardConfig();
   const providerCredentialEnv = onboardCfg?.credentialEnv ?? "NVIDIA_API_KEY";
   const providerLabel = onboardCfg
@@ -244,8 +278,8 @@ export default function register(api: OpenClawPluginApi): void {
     ],
   });
 
-  const bannerEndpoint = onboardCfg?.endpointType ?? "build.nvidia.com";
-  const bannerModel = onboardCfg?.model ?? "nvidia/nemotron-3-super-120b-a12b";
+  const bannerEndpoint = onboardCfg?.endpointType ?? OPENROUTER_ENDPOINT_URL;
+  const bannerModel = onboardCfg?.model ?? defaultOpenRouterModel;
 
   api.logger.info("");
   api.logger.info("  ┌─────────────────────────────────────────────────────┐");

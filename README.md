@@ -10,7 +10,7 @@
   <a href="https://github.com/x402agent/NemoClawd/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/status-alpha-orange?style=flat-square" alt="Status">
   <img src="https://img.shields.io/badge/Solana-Mainnet-9945FF?style=flat-square&logo=solana&logoColor=white" alt="Solana">
-  <img src="https://img.shields.io/badge/xAI-Grok%204.20-black?style=flat-square&logo=x" alt="xAI Grok">
+  <img src="https://img.shields.io/badge/OpenRouter-z--ai%2Fglm--5.2-black?style=flat-square" alt="OpenRouter z-ai/glm-5.2">
   <img src="https://img.shields.io/badge/MCP-31%20tools-blueviolet?style=flat-square" alt="MCP Tools">
   <img src="https://img.shields.io/badge/Multi--Agent-4--16%20agents-purple?style=flat-square" alt="Multi-Agent">
 </p>
@@ -34,6 +34,9 @@
 │   │                                                             │
 │   31 MCP Tools ───────── Solana market data, trading, NFTs      │
 │   │                     Helius RPC/DAS, Pump.fun SDK            │
+│   │                                                             │
+│   Phoenix Perps ──────── Vulcan CLI/MCP for Phoenix futures     │
+│   │                     Paper trading + gated live mode         │
 │   │                                                             │
 │   Multi-Agent Research ─ 4 or 16 Grok agents collaborating     │
 │   │                     Deep Solana research + intelligence   │
@@ -61,7 +64,11 @@ npm install
 npm run build
 npm link
 
-# Start with Grok + Solana tools
+# Default inference route
+export OPENROUTER_API_KEY="your_openrouter_key"
+export OPENROUTER_MODEL="${OPENROUTER_MODEL:-z-ai/glm-5.2}"
+
+# Start with OpenRouter + Solana tools
 nemoclawd launch
 ```
 
@@ -88,15 +95,23 @@ node bin/nemoclawd.js version
 npm test
 npm run build
 npm pack --dry-run --cache /tmp/nemoclawd-npm-cache
+npm run openrouter:smoke
 ```
 
 <!-- end-quickstart-guide -->
 
-### xAI Grok Setup
+### OpenRouter Setup
 
 ```bash
-export XAI_API_KEY="your_key"  # One key unlocks everything
+export OPENROUTER_API_KEY="your_key"
+export OPENROUTER_MODEL="z-ai/glm-5.2"
 export HELIUS_API_KEY="your_free_key"  # From helius.dev
+```
+
+`OPENROUTER_MODEL` defaults to `z-ai/glm-5.2` when unset. The smoke test streams through `@openrouter/sdk` and prints reasoning-token usage when OpenRouter includes it:
+
+```bash
+npm run openrouter:smoke
 ```
 
 ### Grok Models
@@ -107,6 +122,31 @@ export HELIUS_API_KEY="your_free_key"  # From helius.dev
 | `grok-4.20-multi-agent` | 4-16 agents collaborating in real-time | Deep research, complex analysis |
 | `grok-4-1-fast` | Quick responses, low latency | Fast queries, real-time UX |
 | `grok-imagine-image` | Image generation + editing | Memes, avatars, visualizations |
+
+### Phoenix Perps Setup
+
+NemoClawd includes Phoenix perpetual futures support through the official Vulcan CLI. It uses the same `RPC_URL` / `SOLANA_RPC_URL` configured for the rest of the Solana stack.
+
+```bash
+export RPC_URL="https://your-mainnet-rpc"
+
+# In a sandbox:
+nemoclawd <sandbox> phoenix-perps health
+nemoclawd <sandbox> phoenix-perps markets
+nemoclawd <sandbox> phoenix-perps market SOL
+nemoclawd <sandbox> phoenix-perps paper-init 10000
+nemoclawd <sandbox> phoenix-perps preflight "$VULCAN_WALLET_NAME"
+```
+
+Live-capable MCP requires explicit wallet env and still relies on Vulcan acknowledgements for dangerous tools:
+
+```bash
+export VULCAN_WALLET_NAME="my-wallet"
+export VULCAN_WALLET_PASSWORD="..."
+nemoclawd <sandbox> phoenix-perps mcp-live
+```
+
+Use `nemoclawd <sandbox> policy-add` and apply `phoenix-perps` plus `solana-rpc` before running inside a locked-down sandbox.
 
 ### MCP Tools (31)
 
@@ -253,13 +293,20 @@ Then connect via:
 ```bash
 # Core (free at helius.dev)
 HELIUS_API_KEY=               # RPC, DAS, enhanced txs, webhooks
+RPC_URL=                      # Preferred Solana RPC for Solana + Phoenix/Vulcan
 HELIUS_RPC_URL=               # Helius mainnet RPC
 
-# xAI Grok (one key unlocks everything)
+# OpenRouter (default inference)
+OPENROUTER_API_KEY=           # OpenRouter chat/completions routing
+OPENROUTER_MODEL=z-ai/glm-5.2 # Default model
+
+# xAI Grok (optional)
 XAI_API_KEY=                  # Grok: chat, voice, vision, search, multi-agent
 
-# OpenRouter (optional)
-OPENROUTER_API_KEY=           # Multi-model LLM routing
+# Phoenix perps / Vulcan
+PHOENIX_API_URL=https://perp-api.phoenix.trade
+VULCAN_WALLET_NAME=           # Live-capable Vulcan wallet
+VULCAN_WALLET_PASSWORD=       # Required only for live MCP
 
 # Telegram
 TELEGRAM_BOT_TOKEN=           # From @BotFather

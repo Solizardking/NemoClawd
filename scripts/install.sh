@@ -144,10 +144,28 @@ install_openshell() {
   info "OpenShell $(openshell --version 2>&1 || echo 'installed')"
 }
 
+install_vulcan() {
+  if command -v vulcan > /dev/null 2>&1; then
+    info "Vulcan already installed: $(vulcan version 2>&1 || echo 'unknown')"
+    return 0
+  fi
+
+  info "Installing Vulcan CLI for Phoenix perps..."
+  VULCAN_INSTALL_DIR="${VULCAN_INSTALL_DIR:-$HOME/.local/bin}" \
+    sh -c "$(curl -fsSL https://github.com/Ellipsis-Labs/vulcan-cli/releases/latest/download/install.sh)"
+  case ":$PATH:" in
+    *":${VULCAN_INSTALL_DIR:-$HOME/.local/bin}:"*) ;;
+    *) export PATH="${VULCAN_INSTALL_DIR:-$HOME/.local/bin}:$PATH" ;;
+  esac
+  command -v vulcan > /dev/null 2>&1 || fail "Vulcan installation failed. Binary not found on PATH."
+  info "Vulcan $(vulcan version 2>&1 || echo installed)"
+}
+
 install_node
 ensure_supported_runtime
 install_docker
 install_openshell
+install_vulcan
 
 NPM_PACKAGE="@mawdbotsonsolana/nemoclawd"
 info "Installing ${NPM_PACKAGE}..."
