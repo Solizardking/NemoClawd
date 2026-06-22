@@ -1,0 +1,215 @@
+# Clawd Box Sandbox Policy
+#
+# Strict baseline policy for the Clawd Box sandbox.
+# Principle: deny by default, allow only what's needed for core functionality.
+# Dynamic updates (network_policies, inference) can be applied post-creation
+# via `clawd-box policy set`. Static fields are effectively creation-locked.
+#
+# Policy tiers:
+#   strict  — this file. Minimum for onboard + basic agent operation.
+#   relaxed — adds third-party model providers, broader web access.
+#
+# To add endpoints: update this file and re-run `clawd-box sandbox migrate`
+# or apply dynamically via `clawd-box policy set`.
+
+version: 1
+
+filesystem_policy:
+  include_workdir: true
+  read_only:
+    - /usr
+    - /lib
+    - /proc
+    - /dev/urandom
+    - /app
+    - /etc
+    - /var/log
+  read_write:
+    - /sandbox
+    - /tmp
+    - /dev/null
+
+landlock:
+  compatibility: best_effort
+
+process:
+  run_as_user: sandbox
+  run_as_group: sandbox
+
+network_policies:
+  claude_code:
+    name: claude_code
+    endpoints:
+      - host: api.anthropic.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        tls: terminate
+        rules:
+          - allow: { method: "*", path: "/**" }
+      - host: statsig.anthropic.com
+        port: 443
+        rules:
+          - allow: { method: "*", path: "/**" }
+      - host: sentry.io
+        port: 443
+        rules:
+          - allow: { method: "*", path: "/**" }
+    binaries:
+      - { path: /usr/local/bin/claude }
+
+  # ── Clawd Box router — free LLM inference via ClawdRouter ────────────────
+  # Allows the sandbox to reach the Clawd Box router for free-tier inference
+  # (clawd_free_* bypass, 79+ models). Binary-restricted to claude and clawd.
+  clawd_box:
+    name: clawd_box
+    endpoints:
+      - host: clawd-box-router.fly.dev
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        tls: terminate
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }
+    binaries:
+      - { path: /usr/local/bin/claude }
+      - { path: /usr/local/bin/clawd }
+
+  # ── ClawdBrowser API — capability + agent endpoints ─────────────────────
+  clawd_browser:
+    name: clawd_browser
+    endpoints:
+      - host: app.clawd.io
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        tls: terminate
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }
+    binaries:
+      - { path: /usr/local/bin/claude }
+      - { path: /usr/local/bin/clawd }
+
+  nvidia:
+    name: nvidia
+    endpoints:
+      - host: integrate.api.nvidia.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        tls: terminate
+        rules:
+          - allow: { method: "*", path: "/**" }
+      - host: inference-api.nvidia.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        tls: terminate
+        rules:
+          - allow: { method: "*", path: "/**" }
+    binaries:
+      - { path: /usr/local/bin/claude }
+      - { path: /usr/local/bin/clawd }
+
+  github:
+    name: github
+    endpoints:
+      - host: github.com
+        port: 443
+        access: full
+      - host: api.github.com
+        port: 443
+        access: full
+    binaries:
+      - { path: /usr/bin/gh }
+      - { path: /usr/bin/git }
+
+  # ── HuggingFace — model downloads and serverless inference ──────────────
+  huggingface:
+    name: huggingface
+    endpoints:
+      - host: huggingface.co
+        port: 443
+        access: full
+      - host: api-inference.huggingface.co
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        tls: terminate
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }
+    binaries:
+      - { path: /usr/local/bin/claude }
+      - { path: /usr/local/bin/clawd }
+
+  # npm registry — needed for `clawd plugins install` and `npm install`
+  npm_registry:
+    name: npm_registry
+    endpoints:
+      - host: registry.npmjs.org
+        port: 443
+        access: full
+    binaries:
+      - { path: /usr/local/bin/clawd }
+      - { path: /usr/local/bin/npm }
+
+  # ── Messaging — pre-allowed for agent notifications ──────────────────────
+  telegram:
+    name: telegram
+    endpoints:
+      - host: api.telegram.org
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        tls: terminate
+        rules:
+          - allow: { method: GET, path: "/bot*/**" }
+          - allow: { method: POST, path: "/bot*/**" }
+
+  # ── Ollama (local inference) ─────────────────────────────────────────────
+  # Allow sandbox to reach Ollama on the host for DeepSolana / any
+  # local model. Uses host.clawd-box.internal (Docker host alias).
+  ollama:
+    name: ollama
+    endpoints:
+      - host: host.clawd-box.internal
+        port: 11434
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow: { method: "*", path: "/**" }
+    binaries:
+      - { path: /usr/local/bin/clawd }
+      - { path: /usr/bin/curl }
+
+  # ── Solana RPC — mainnet + common providers ──────────────────────────────
+  solana_rpc:
+    name: solana_rpc
+    endpoints:
+      - host: api.mainnet-beta.solana.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        tls: terminate
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }
+      - host: "*.helius-rpc.com"
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        tls: terminate
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }
+      - host: "*.quiknode.pro"
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        tls: terminate
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }

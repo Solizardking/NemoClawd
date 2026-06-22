@@ -1,9 +1,6 @@
-# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 version: "0.1.0"
-min_openshell_version: "0.1.0"
-min_openclaw_version: "2026.3.0"
+min_clawd_box_version: "0.1.0"
+min_nemoclawd_version: "2026.3.0"
 digest: ""  # Computed at release time
 
 profiles:
@@ -11,15 +8,16 @@ profiles:
   - ncp
   - nim-local
   - vllm
+  - clawd-router
 
 description: |
-  NemoClaw blueprint: orchestrates OpenClaw sandbox creation, migration,
-  and NIM/vLLM inference routing inside OpenShell.
+  NemoClaw blueprint: orchestrates Clawd Box sandbox creation, migration,
+  and NIM/vLLM/ClawdRouter inference routing inside the Clawd Box sandbox runtime.
 
 components:
   sandbox:
-    image: "ghcr.io/nvidia/openshell-community/sandboxes/openclaw:latest"
-    name: "openclaw"
+    image: "ghcr.io/8bitlabs/clawd-box/sandboxes/clawd:latest"
+    name: "clawd-box"
     forward_ports:
       - 18789
 
@@ -54,8 +52,19 @@ components:
         credential_env: "OPENAI_API_KEY"
         credential_default: "dummy"
 
+      # ── ClawdRouter free tier ─────────────────────────────────────────────
+      # Uses the Clawd Box router for free LLM inference (79+ models).
+      # Requires CLAWD_ROUTER_KEY or the clawd_free_* bypass for provisioned agents.
+      clawd-router:
+        provider_type: "openai"
+        provider_name: "clawd-router"
+        endpoint: "https://clawd-box-router.fly.dev/v1"
+        model: "solana-clawd-1.5b"
+        credential_env: "CLAWD_ROUTER_KEY"
+        credential_default: "clawd_free_anonymous"
+
   policy:
-    base: "sandboxes/openclaw/policy.yaml"
+    base: "policies/clawd-box-sandbox.yaml"
     additions:
       nim_service:
         name: nim_service

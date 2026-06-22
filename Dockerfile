@@ -1,25 +1,25 @@
-# NemoClaw sandbox image — OpenClaw + NemoClaw plugin inside OpenShell
+# NemoClawd sandbox image — Clawd + NemoClawd plugin inside Clawd Box
+# Uses Alpine for minimal attack surface
 
-FROM node:22-slim
+FROM node:22-alpine
 
-ENV DEBIAN_FRONTEND=noninteractive
+# Patch OS-level packages; Node.js-bundled CVEs require a Node.js release update
+RUN apk upgrade --no-cache
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        build-essential \
-        python3 python3-pip python3-venv \
+RUN apk add --no-cache \
+        build-base \
+        python3 py3-pip \
         curl git ca-certificates \
-        iproute2 bzip2 \
-    && rm -rf /var/lib/apt/lists/*
+        iproute2 bzip2 bash
 
 # Install Solana CLI tools via an explicit Agave release.
-# Anza publishes installers for x86_64 Linux, x86_64/aarch64 macOS, and Windows,
-# but not for Linux aarch64. Apple Silicon hosts building a Linux/arm64 sandbox
-# must therefore skip the bundled CLI install instead of hard-failing the image.
+# Anza publishes installers for x86_64 Linux only.
+# Linux/arm64 (Orin Nano builds) skip the CLI and use the Orin-specific image.
 ARG SOLANA_VERSION=v3.1.9
 RUN set -eux; \
-    arch="$(dpkg --print-architecture)"; \
-    if [ "${arch}" = "arm64" ]; then \
-      echo 'WARN: Agave does not publish Linux arm64 CLI installers; skipping Solana CLI in this sandbox build'; \
+    arch="$(uname -m)"; \
+    if [ "${arch}" = "aarch64" ]; then \
+      echo 'WARN: Agave does not publish Linux arm64 CLI installers; skipping Solana CLI. Use Dockerfile.orin-nano for Jetson Orin Nano.'; \
     else \
       sh -c "$(curl -sSfL https://release.anza.xyz/${SOLANA_VERSION}/install)"; \
       SOLANA_BIN_DIR="/root/.local/share/solana/install/active_release/bin"; \
@@ -33,22 +33,22 @@ RUN set -eux; \
       fi; \
     fi
 
-# Create sandbox user (matches OpenShell convention)
-RUN groupadd -r sandbox && useradd -r -g sandbox -d /sandbox -s /bin/bash sandbox \
-    && mkdir -p /sandbox/.openclaw /sandbox/.nemoclaw \
+# Create sandbox user (matches Clawd Box convention)
+RUN addgroup -S sandbox && adduser -S -G sandbox -h /sandbox sandbox \
+    && mkdir -p /sandbox/.clawd /sandbox/.clawd-box \
     && chown -R sandbox:sandbox /sandbox
 
-# Install OpenClaw CLI
-RUN npm install -g openclaw@2026.3.11
+# Install Clawd CLI
+RUN npm install -g clawd@2026.3.11
 
 # Install PyYAML for blueprint runner
 RUN pip3 install --break-system-packages pyyaml
 
 # Copy our plugin and blueprint into the sandbox
-COPY nemoclaw/dist/ /opt/nemoclaw/dist/
-COPY nemoclaw/openclaw.plugin.json /opt/nemoclaw/
-COPY nemoclaw/package.json /opt/nemoclaw/
-COPY nemoclaw-blueprint/ /opt/nemoclaw-blueprint/
+COPY nemoclawd/dist/ /opt/nemoclawd/dist/
+COPY nemoclawd/openclaw.plugin.json /opt/nemoclawd/
+COPY nemoclawd/package.json /opt/nemoclawd/
+COPY nemoclawd-blueprint/ /opt/nemoclawd-blueprint/
 COPY Pump-Fun/agent-app/ /opt/pump-fun/agent-app/
 COPY Pump-Fun/agent-tasks/ /opt/pump-fun/agent-tasks/
 COPY Pump-Fun/docs/ /opt/pump-fun/docs/
@@ -69,11 +69,10 @@ COPY Pump-Fun/x402/ /opt/pump-fun/x402/
 COPY Pump-Fun/src/ /opt/pump-fun/sdk/src/
 COPY pump-fun-skills-main/tokenized-agents/ /opt/pump-fun/tokenized-agents-skill/
 
-# Install runtime dependencies only (no devDependencies, no build step)
-WORKDIR /opt/nemoclaw
+# Install runtime dependencies only
+WORKDIR /opt/nemoclawd
 RUN npm install --omit=dev
 
-# Install Pump-Fun Solana agent dependencies so the tracker bot can run
 WORKDIR /opt/pump-fun/agent-app
 RUN npm install
 
@@ -90,42 +89,40 @@ WORKDIR /opt/pump-fun/x402
 RUN npm install
 
 # Set up blueprint for local resolution
-RUN mkdir -p /sandbox/.nemoclaw/blueprints/0.1.0 \
-    && cp -r /opt/nemoclaw-blueprint/* /sandbox/.nemoclaw/blueprints/0.1.0/
+RUN mkdir -p /sandbox/.clawd-box/blueprints/0.1.0 \
+    && cp -r /opt/nemoclawd-blueprint/* /sandbox/.clawd-box/blueprints/0.1.0/
 
-# Copy startup script
-COPY scripts/nemoclaw-start.sh /usr/local/bin/nemoclaw-start
-COPY scripts/nemoclaw-solana-agent.sh /usr/local/bin/nemoclaw-solana-agent
-COPY scripts/nemoclaw-payment-app.sh /usr/local/bin/nemoclaw-payment-app
-COPY scripts/nemoclaw-telegram-bot.sh /usr/local/bin/nemoclaw-telegram-bot
-COPY scripts/nemoclaw-swarm-bot.sh /usr/local/bin/nemoclaw-swarm-bot
-COPY scripts/nemoclaw-websocket-server.sh /usr/local/bin/nemoclaw-websocket-server
-COPY scripts/nemoclaw-solana-bridge.sh /usr/local/bin/nemoclaw-solana-bridge
-COPY scripts/nemoclaw-solana-stack.sh /usr/local/bin/nemoclaw-solana-stack
-RUN chmod +x /usr/local/bin/nemoclaw-start
-RUN chmod +x /usr/local/bin/nemoclaw-solana-agent
-RUN chmod +x /usr/local/bin/nemoclaw-payment-app
-RUN chmod +x /usr/local/bin/nemoclaw-telegram-bot
-RUN chmod +x /usr/local/bin/nemoclaw-swarm-bot
-RUN chmod +x /usr/local/bin/nemoclaw-websocket-server
-RUN chmod +x /usr/local/bin/nemoclaw-solana-bridge
-RUN chmod +x /usr/local/bin/nemoclaw-solana-stack
+# Copy startup scripts
+COPY scripts/nemoclawd-start.sh       /usr/local/bin/nemoclawd-start
+COPY scripts/nemoclawd-solana-agent.sh    /usr/local/bin/nemoclawd-solana-agent
+COPY scripts/nemoclawd-payment-app.sh    /usr/local/bin/nemoclawd-payment-app
+COPY scripts/nemoclawd-telegram-bot.sh   /usr/local/bin/nemoclawd-telegram-bot
+COPY scripts/nemoclawd-swarm-bot.sh      /usr/local/bin/nemoclawd-swarm-bot
+COPY scripts/nemoclawd-websocket-server.sh /usr/local/bin/nemoclawd-websocket-server
+COPY scripts/nemoclawd-solana-bridge.sh  /usr/local/bin/nemoclawd-solana-bridge
+COPY scripts/nemoclawd-solana-stack.sh   /usr/local/bin/nemoclawd-solana-stack
+RUN chmod +x \
+    /usr/local/bin/nemoclawd-start \
+    /usr/local/bin/nemoclawd-solana-agent \
+    /usr/local/bin/nemoclawd-payment-app \
+    /usr/local/bin/nemoclawd-telegram-bot \
+    /usr/local/bin/nemoclawd-swarm-bot \
+    /usr/local/bin/nemoclawd-websocket-server \
+    /usr/local/bin/nemoclawd-solana-bridge \
+    /usr/local/bin/nemoclawd-solana-stack
 
-# Install Helius CLI for advanced RPC operations
 RUN npm install -g helius-cli 2>/dev/null || echo 'WARN: helius-cli install skipped'
 
 WORKDIR /sandbox
 USER sandbox
 
-# Pre-create OpenClaw directories and Privy skill
-RUN mkdir -p /sandbox/.openclaw/agents/main/agent \
-    && mkdir -p /sandbox/.openclaw/workspace/skills/privy \
-    && mkdir -p /sandbox/.nemoclaw/wallets \
-    && chmod 700 /sandbox/.openclaw \
-    && chmod 700 /sandbox/.nemoclaw/wallets
+RUN mkdir -p /sandbox/.clawd/agents/main/agent \
+    && mkdir -p /sandbox/.clawd/workspace/skills/privy \
+    && mkdir -p /sandbox/.clawd-box/wallets \
+    && chmod 700 /sandbox/.clawd \
+    && chmod 700 /sandbox/.clawd-box/wallets
 
-# Write Privy agentic wallet skill for OpenClaw
-RUN cat > /sandbox/.openclaw/workspace/skills/privy/SKILL.md <<'PRIVY_SKILL'
+RUN cat > /sandbox/.clawd/workspace/skills/privy/SKILL.md <<'PRIVY_SKILL'
 ---
 name: privy-agentic-wallets
 description: |
@@ -136,17 +133,9 @@ description: |
 
 ## Privy Agentic Wallet Skill
 
-This skill enables autonomous wallet operations via Privy server wallets.
-
 ### Environment Variables
 - `PRIVY_APP_ID` — Your Privy app ID (from dashboard.privy.io)
 - `PRIVY_APP_SECRET` — Your Privy app secret
-
-### Capabilities
-- **Create wallets**: Solana server wallets for autonomous signing
-- **Attach policies**: Spending limits, chain restrictions, contract allowlists
-- **Sign transactions**: Agent can sign and submit transactions within policy bounds
-- **No local keys**: Private keys never leave Privy infrastructure
 
 ### Create a Wallet
 ```bash
@@ -159,32 +148,35 @@ curl -X POST https://auth.privy.io/api/v1/wallets \
 
 ### Security Rules
 - NEVER log or expose PRIVY_APP_SECRET
-- Start with restrictive policies, loosen over time
 - Only fund wallets with amounts you can afford to lose
-- Always verify transactions match intended parameters
 PRIVY_SKILL
 
-# Write openclaw.json: set nvidia as default provider, route through
-# inference.local (OpenShell gateway proxy). No API key needed here —
-# openshell injects credentials via the provider configuration.
+# Write clawd.json: nvidia + clawd-router providers via Clawd Box gateway
 RUN python3 -c "\
 import json, os; \
 config = { \
     'agents': {'defaults': {'model': {'primary': 'nvidia/nemotron-3-super-120b-a12b'}}}, \
-    'models': {'mode': 'merge', 'providers': {'nvidia': { \
-        'baseUrl': 'https://inference.local/v1', \
-        'apiKey': 'openshell-managed', \
-        'api': 'openai-completions', \
-        'models': [{'id': 'nemotron-3-super-120b-a12b', 'name': 'NVIDIA Nemotron 3 Super 120B', 'reasoning': False, 'input': ['text'], 'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0}, 'contextWindow': 131072, 'maxTokens': 4096}] \
-    }}} \
+    'models': {'mode': 'merge', 'providers': { \
+        'nvidia': { \
+            'baseUrl': 'https://inference.clawd-box.internal/v1', \
+            'apiKey': 'clawd-box-managed', \
+            'api': 'openai-completions', \
+            'models': [{'id': 'nemotron-3-super-120b-a12b', 'name': 'NVIDIA Nemotron 3 Super 120B', 'reasoning': True, 'input': ['text'], 'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0}, 'contextWindow': 131072, 'maxTokens': 8192}] \
+        }, \
+        'clawd-router': { \
+            'baseUrl': 'https://clawd-box-router.fly.dev/v1', \
+            'apiKey': 'clawd_free_anonymous', \
+            'api': 'openai-completions', \
+            'models': [{'id': 'solana-clawd-1.5b', 'name': 'Solana Clawd 1.5B', 'reasoning': False, 'input': ['text'], 'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0}, 'contextWindow': 32768, 'maxTokens': 2048}] \
+        } \
+    }} \
 }; \
-path = os.path.expanduser('~/.openclaw/openclaw.json'); \
+path = os.path.expanduser('~/.clawd/clawd.json'); \
 json.dump(config, open(path, 'w'), indent=2); \
 os.chmod(path, 0o600)"
 
-# Install NemoClaw plugin into OpenClaw
-RUN openclaw doctor --fix > /dev/null 2>&1 || true \
-    && openclaw plugins install /opt/nemoclaw > /dev/null 2>&1 || true
+RUN clawd doctor --fix > /dev/null 2>&1 || true \
+    && clawd plugins install /opt/nemoclawd > /dev/null 2>&1 || true
 
 ENTRYPOINT ["/bin/bash"]
 CMD []

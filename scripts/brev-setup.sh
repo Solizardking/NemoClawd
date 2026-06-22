@@ -1,41 +1,25 @@
 #!/usr/bin/env bash
-# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
 # Brev VM bootstrap — installs prerequisites then runs setup.sh.
 #
 # Run on a fresh Brev VM:
 #   export NVIDIA_API_KEY=nvapi-...
 #   ./scripts/brev-setup.sh
-#
-# What it does:
-#   1. Installs Docker (if missing)
-#   2. Installs NVIDIA Container Toolkit (if GPU present)
-#   3. Installs openshell CLI from GitHub release (binary, no Rust build)
-#   4. Runs setup.sh
 
 set -euo pipefail
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 info() { echo -e "${GREEN}[brev]${NC} $1"; }
 warn() { echo -e "${YELLOW}[brev]${NC} $1"; }
 fail() { echo -e "${RED}[brev]${NC} $1"; exit 1; }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-
 [ -n "${NVIDIA_API_KEY:-}" ] || fail "NVIDIA_API_KEY not set"
 
-# Suppress needrestart noise from apt (Scanning processes, No services need...)
-export NEEDRESTART_MODE=a
-export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a DEBIAN_FRONTEND=noninteractive
 
-# --- 0. Node.js (needed for services) ---
+# --- 0. Node.js ---
 if ! command -v node > /dev/null 2>&1; then
-  info "Installing Node.js..."
+  info "Installing Node.js 22..."
   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - > /dev/null 2>&1
   sudo apt-get install -y -qq nodejs > /dev/null 2>&1
   info "Node.js $(node --version) installed"
@@ -73,90 +57,68 @@ if command -v nvidia-smi > /dev/null 2>&1; then
   fi
 fi
 
-# --- 3. openshell CLI (binary release, not pip) ---
-if ! command -v openshell > /dev/null 2>&1; then
-  info "Installing openshell CLI from GitHub release..."
-  if ! command -v gh > /dev/null 2>&1; then
-    sudo apt-get update -qq > /dev/null 2>&1
-    sudo apt-get install -y -qq gh > /dev/null 2>&1
-  fi
+# --- 3. Clawd Box CLI (binary release) ---
+if ! command -v clawd-box > /dev/null 2>&1; then
+  info "Installing Clawd Box CLI from GitHub release..."
+  ! command -v gh > /dev/null 2>&1 && { sudo apt-get update -qq > /dev/null 2>&1; sudo apt-get install -y -qq gh > /dev/null 2>&1; }
   ARCH="$(uname -m)"
   case "$ARCH" in
-    x86_64|amd64) ASSET="openshell-x86_64-unknown-linux-musl.tar.gz" ;;
-    aarch64|arm64) ASSET="openshell-aarch64-unknown-linux-musl.tar.gz" ;;
-    *) fail "Unsupported architecture: $ARCH" ;;
+    x86_64|amd64)  ASSET="clawd-box-x86_64-unknown-linux-musl.tar.gz" ;;
+    aarch64|arm64) ASSET="clawd-box-aarch64-unknown-linux-musl.tar.gz" ;;
+    *)             fail "Unsupported architecture: $ARCH" ;;
   esac
   tmpdir="$(mktemp -d)"
-  GH_TOKEN="${GITHUB_TOKEN:-}" gh release download --repo NVIDIA/OpenShell \
+  GH_TOKEN="${GITHUB_TOKEN:-}" gh release download --repo 8bitlabs/clawd-box \
     --pattern "$ASSET" --dir "$tmpdir"
   tar xzf "$tmpdir/$ASSET" -C "$tmpdir"
-  sudo install -m 755 "$tmpdir/openshell" /usr/local/bin/openshell
+  sudo install -m 755 "$tmpdir/clawd-box" /usr/local/bin/clawd-box
   rm -rf "$tmpdir"
-  info "openshell $(openshell --version) installed"
+  info "clawd-box $(clawd-box --version) installed"
 else
-  info "openshell already installed: $(openshell --version)"
+  info "clawd-box already installed: $(clawd-box --version)"
 fi
 
-# --- 3b. cloudflared (for public tunnel) ---
+# --- 3b. cloudflared ---
 if ! command -v cloudflared > /dev/null 2>&1; then
   info "Installing cloudflared..."
   CF_ARCH="$(uname -m)"
   case "$CF_ARCH" in
-    x86_64|amd64) CF_ARCH="amd64" ;;
+    x86_64|amd64)  CF_ARCH="amd64" ;;
     aarch64|arm64) CF_ARCH="arm64" ;;
-    *) fail "Unsupported architecture for cloudflared: $CF_ARCH" ;;
+    *)             fail "Unsupported arch for cloudflared: $CF_ARCH" ;;
   esac
   curl -fsSL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${CF_ARCH}" -o /tmp/cloudflared
   sudo install -m 755 /tmp/cloudflared /usr/local/bin/cloudflared
   rm -f /tmp/cloudflared
-  info "cloudflared $(cloudflared --version 2>&1 | head -1) installed"
+  info "cloudflared installed"
 else
   info "cloudflared already installed"
 fi
 
-# --- 4. vLLM (local inference, if GPU present) ---
-VLLM_MODEL="nvidia/nemotron-3-nano-30b-a3b"
+# --- 4. vLLM (GPU only) ---
 if command -v nvidia-smi > /dev/null 2>&1; then
   if ! python3 -c "import vllm" 2>/dev/null; then
     info "Installing vLLM..."
-    if ! command -v pip3 > /dev/null 2>&1; then
-      sudo apt-get install -y -qq python3-pip > /dev/null 2>&1
-    fi
+    ! command -v pip3 > /dev/null 2>&1 && sudo apt-get install -y -qq python3-pip > /dev/null 2>&1
     pip3 install --break-system-packages vllm 2>/dev/null || pip3 install vllm
     info "vLLM installed"
-  else
-    info "vLLM already installed"
   fi
-
-  # Start vLLM if not already running
-  if curl -s http://localhost:8000/v1/models > /dev/null 2>&1; then
-    info "vLLM already running on :8000"
-  elif python3 -c "import vllm" 2>/dev/null; then
+  VLLM_MODEL="nvidia/nemotron-3-nano-30b-a3b"
+  if ! curl -s http://localhost:8000/v1/models > /dev/null 2>&1 && python3 -c "import vllm" 2>/dev/null; then
     info "Starting vLLM with $VLLM_MODEL..."
     nohup python3 -m vllm.entrypoints.openai.api_server \
-      --model "$VLLM_MODEL" \
-      --port 8000 \
-      --host 0.0.0.0 \
-      > /tmp/vllm-server.log 2>&1 &
+      --model "$VLLM_MODEL" --port 8000 --host 0.0.0.0 > /tmp/vllm-server.log 2>&1 &
     VLLM_PID=$!
-    info "Waiting for vLLM to load model (this can take a few minutes)..."
-    for i in $(seq 1 120); do
-      if curl -s http://localhost:8000/v1/models > /dev/null 2>&1; then
-        info "vLLM ready (PID $VLLM_PID)"
-        break
-      fi
-      if ! kill -0 "$VLLM_PID" 2>/dev/null; then
-        warn "vLLM exited. Check /tmp/vllm-server.log"
-        break
-      fi
+    info "Waiting for vLLM to load model..."
+    for _ in $(seq 1 120); do
+      curl -s http://localhost:8000/v1/models > /dev/null 2>&1 && { info "vLLM ready (PID $VLLM_PID)"; break; }
+      kill -0 "$VLLM_PID" 2>/dev/null || { warn "vLLM exited. Check /tmp/vllm-server.log"; break; }
       sleep 2
     done
   fi
 fi
 
 # --- 5. Run setup.sh ---
-# Use sg docker to ensure docker group is active (usermod -aG doesn't
-# take effect in the current session without re-login)
 info "Running setup.sh..."
 export NVIDIA_API_KEY
 exec sg docker -c "bash $SCRIPT_DIR/setup.sh"

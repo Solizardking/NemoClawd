@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 """
-NemoClaw Blueprint Runner
+NemoClaw Blueprint Runner — Clawd Box edition
 
-Orchestrates OpenClaw sandbox lifecycle inside OpenShell.
+Orchestrates Clawd Box sandbox lifecycle.
 Called by the thin TS plugin via subprocess.
 
 Protocol:
   - stdout lines starting with PROGRESS:<0-100>:<label> are parsed as progress updates
   - stdout line RUN_ID:<id> reports the run identifier
   - exit code 0 = success, non-zero = failure
+
+CLI binary:
+  Uses `clawd-box` instead of `openshell`.
+  Override via env var CLAWD_BOX_CLI (e.g., for testing or alternate installs).
 """
 
 import argparse
@@ -27,6 +28,12 @@ from typing import Any
 
 import yaml
 
+# The CLI binary name — override with CLAWD_BOX_CLI env var for testing
+CLAWD_BOX_CLI = os.environ.get("CLAWD_BOX_CLI", "clawd-box")
+
+# State lives under ~/.clawd-box/state/runs/
+STATE_ROOT = Path.home() / ".clawd-box" / "state" / "runs"
+
 
 def log(msg: str) -> None:
     print(msg, flush=True)
@@ -37,7 +44,7 @@ def progress(pct: int, label: str) -> None:
 
 
 def emit_run_id() -> str:
-    rid = f"nc-{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:8]}"
+    rid = f"cb-{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:8]}"
     print(f"RUN_ID:{rid}", flush=True)
     return rid
 
@@ -67,9 +74,9 @@ def run_cmd(
     )
 
 
-def openshell_available() -> bool:
-    """Check if openshell CLI is available."""
-    return shutil.which("openshell") is not None
+def clawd_box_available() -> bool:
+    """Check if clawd-box CLI is available."""
+    return shutil.which(CLAWD_BOX_CLI) is not None
 
 
 # ---------------------------------------------------------------------------
@@ -97,15 +104,15 @@ def action_plan(
         sys.exit(1)
 
     progress(20, "Checking prerequisites")
-    if not openshell_available():
-        log("ERROR: openshell CLI not found. Install OpenShell first.")
-        log("  See: https://github.com/NVIDIA/OpenShell")
+    if not clawd_box_available():
+        log(f"ERROR: {CLAWD_BOX_CLI} CLI not found. Install Clawd Box first.")
+        log("  See: https://github.com/8bitlabs/clawd-box")
+        log(f"  Or set CLAWD_BOX_CLI env var to point at your install.")
         sys.exit(1)
 
     sandbox_cfg: dict[str, Any] = blueprint.get("components", {}).get("sandbox", {})
     inference_cfg: dict[str, Any] = inference_profiles[profile]
 
-    # Override endpoint if provided (e.g., NCP dynamic endpoint)
     if endpoint_url:
         inference_cfg = {**inference_cfg, "endpoint": endpoint_url}
 
@@ -113,8 +120,8 @@ def action_plan(
         "run_id": rid,
         "profile": profile,
         "sandbox": {
-            "image": sandbox_cfg.get("image", "openclaw"),
-            "name": sandbox_cfg.get("name", "openclaw"),
+            "image": sandbox_cfg.get("image", "ghcr.io/8bitlabs/clawd-box/sandboxes/clawd:latest"),
+            "name": sandbox_cfg.get("name", "clawd-box"),
             "forward_ports": sandbox_cfg.get("forward_ports", [18789]),
         },
         "inference": {
@@ -144,30 +151,29 @@ def action_apply(
     """Apply the plan: create sandbox, configure provider, set inference route."""
     rid = emit_run_id()
 
-    # Load plan if provided, otherwise generate one
     if plan_path:
-        # In a real implementation, load the saved plan
-        pass
+        pass  # Future: load saved plan from disk
 
     inference_profiles: dict[str, Any] = (
         blueprint.get("components", {}).get("inference", {}).get("profiles", {})
     )
     inference_cfg: dict[str, Any] = inference_profiles.get(profile, {})
 
-    # Override endpoint if provided (e.g., NCP dynamic endpoint)
     if endpoint_url:
         inference_cfg = {**inference_cfg, "endpoint": endpoint_url}
 
     sandbox_cfg: dict[str, Any] = blueprint.get("components", {}).get("sandbox", {})
 
-    sandbox_name: str = sandbox_cfg.get("name", "openclaw")
-    sandbox_image: str = sandbox_cfg.get("image", "openclaw")
+    sandbox_name: str = sandbox_cfg.get("name", "clawd-box")
+    sandbox_image: str = sandbox_cfg.get(
+        "image", "ghcr.io/8bitlabs/clawd-box/sandboxes/clawd:latest"
+    )
     forward_ports: list[int] = sandbox_cfg.get("forward_ports", [18789])
 
     # Step 1: Create sandbox
-    progress(20, "Creating OpenClaw sandbox")
+    progress(20, "Creating Clawd Box sandbox")
     create_args = [
-        "openshell",
+        CLAWD_BOX_CLI,
         "sandbox",
         "create",
         "--from",
@@ -193,7 +199,6 @@ def action_apply(
     endpoint: str = inference_cfg.get("endpoint", "")
     model: str = inference_cfg.get("model", "")
 
-    # Resolve credential from environment
     credential_env = inference_cfg.get("credential_env")
     credential_default: str = inference_cfg.get("credential_default", "")
     credential = ""
@@ -201,7 +206,7 @@ def action_apply(
         credential = os.environ.get(credential_env, credential_default)
 
     provider_args = [
-        "openshell",
+        CLAWD_BOX_CLI,
         "provider",
         "create",
         "--name",
@@ -219,14 +224,14 @@ def action_apply(
     # Step 3: Set inference route
     progress(70, "Setting inference route")
     run_cmd(
-        ["openshell", "inference", "set", "--provider", provider_name, "--model", model],
+        [CLAWD_BOX_CLI, "inference", "set", "--provider", provider_name, "--model", model],
         check=False,
         capture=True,
     )
 
     # Step 4: Save run state
     progress(85, "Saving run state")
-    state_dir = Path.home() / ".nemoclaw" / "state" / "runs" / rid
+    state_dir = STATE_ROOT / rid
     state_dir.mkdir(parents=True, exist_ok=True)
     (state_dir / "plan.json").write_text(
         json.dumps(
@@ -249,15 +254,14 @@ def action_apply(
 def action_status(rid: str | None = None) -> None:
     """Report current state of the most recent (or specified) run."""
     emit_run_id()
-    state_dir = Path.home() / ".nemoclaw" / "state" / "runs"
 
     if rid:
-        run_dir = state_dir / rid
+        run_dir = STATE_ROOT / rid
     else:
-        if not state_dir.exists():
+        if not STATE_ROOT.exists():
             log("No runs found.")
             sys.exit(0)
-        runs = sorted(state_dir.iterdir(), reverse=True)
+        runs = sorted(STATE_ROOT.iterdir(), reverse=True)
         if not runs:
             log("No runs found.")
             sys.exit(0)
@@ -274,7 +278,7 @@ def action_rollback(rid: str) -> None:
     """Rollback a specific run: stop sandbox, remove provider config."""
     emit_run_id()
 
-    state_dir = Path.home() / ".nemoclaw" / "state" / "runs" / rid
+    state_dir = STATE_ROOT / rid
     if not state_dir.exists():
         log(f"ERROR: Run {rid} not found.")
         sys.exit(1)
@@ -282,18 +286,18 @@ def action_rollback(rid: str) -> None:
     plan_file = state_dir / "plan.json"
     if plan_file.exists():
         plan = json.loads(plan_file.read_text())
-        sandbox_name = plan.get("sandbox_name", "openclaw")
+        sandbox_name = plan.get("sandbox_name", "clawd-box")
 
         progress(30, f"Stopping sandbox {sandbox_name}")
         run_cmd(
-            ["openshell", "sandbox", "stop", sandbox_name],
+            [CLAWD_BOX_CLI, "sandbox", "stop", sandbox_name],
             check=False,
             capture=True,
         )
 
         progress(60, f"Removing sandbox {sandbox_name}")
         run_cmd(
-            ["openshell", "sandbox", "remove", sandbox_name],
+            [CLAWD_BOX_CLI, "sandbox", "remove", sandbox_name],
             check=False,
             capture=True,
         )
@@ -310,7 +314,7 @@ def action_rollback(rid: str) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="NemoClaw Blueprint Runner")
+    parser = argparse.ArgumentParser(description="NemoClaw Blueprint Runner — Clawd Box edition")
     parser.add_argument("action", choices=["plan", "apply", "status", "rollback"])
     parser.add_argument("--profile", default="default")
     parser.add_argument("--plan", dest="plan_path")
