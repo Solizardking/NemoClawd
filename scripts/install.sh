@@ -131,46 +131,25 @@ install_docker() {
   info "Docker is running"
 }
 
-install_clawd_box() {
-  if command -v clawd-box > /dev/null 2>&1; then
-    info "clawd-box already installed: $(clawd-box --version 2>&1 || echo 'unknown')"; return 0
+install_openshell() {
+  if command -v openshell > /dev/null 2>&1; then
+    info "OpenShell already installed: $(openshell --version 2>&1 || echo 'unknown')"
+    return 0
   fi
-  info "Installing Clawd Box CLI..."
-  case "$OS" in
-    Darwin)
-      case "$ARCH_LABEL" in
-        x86_64)  ASSET="clawd-box-x86_64-apple-darwin.tar.gz" ;;
-        aarch64) ASSET="clawd-box-aarch64-apple-darwin.tar.gz" ;;
-      esac ;;
-    Linux)
-      case "$ARCH_LABEL" in
-        x86_64)  ASSET="clawd-box-x86_64-unknown-linux-musl.tar.gz" ;;
-        aarch64) ASSET="clawd-box-aarch64-unknown-linux-musl.tar.gz" ;;
-      esac ;;
-  esac
-  local tmpdir; tmpdir="$(mktemp -d)"
-  if command -v gh > /dev/null 2>&1; then
-    GH_TOKEN="${GITHUB_TOKEN:-}" gh release download --repo 8bitlabs/clawd-box \
-      --pattern "$ASSET" --dir "$tmpdir"
-  else
-    curl -fsSL "https://github.com/8bitlabs/clawd-box/releases/latest/download/$ASSET" -o "$tmpdir/$ASSET"
-  fi
-  tar xzf "$tmpdir/$ASSET" -C "$tmpdir"
-  if [ -w /usr/local/bin ]; then
-    install -m 755 "$tmpdir/clawd-box" /usr/local/bin/clawd-box
-  else
-    sudo install -m 755 "$tmpdir/clawd-box" /usr/local/bin/clawd-box
-  fi
-  rm -rf "$tmpdir"
-  info "clawd-box $(clawd-box --version 2>&1 || echo '') installed"
+
+  info "Installing NVIDIA OpenShell..."
+  curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/install.sh | sh
+  refresh_path
+  command -v openshell > /dev/null 2>&1 || fail "OpenShell installation failed. Binary not found on PATH."
+  info "OpenShell $(openshell --version 2>&1 || echo 'installed')"
 }
 
 install_node
 ensure_supported_runtime
 install_docker
-install_clawd_box
+install_openshell
 
-NPM_PACKAGE="@8bitlabs/nemoclawd"
+NPM_PACKAGE="@mawdbotsonsolana/nemoclawd"
 info "Installing ${NPM_PACKAGE}..."
 if [ "$NODE_MGR" = "nodesource" ]; then
   sudo npm install -g "$NPM_PACKAGE"

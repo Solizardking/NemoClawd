@@ -1,5 +1,5 @@
 version: "0.1.0"
-min_clawd_box_version: "0.1.0"
+min_openshell_version: "2026.6.0"
 min_nemoclawd_version: "2026.3.0"
 digest: ""  # Computed at release time
 
@@ -8,16 +8,15 @@ profiles:
   - ncp
   - nim-local
   - vllm
-  - clawd-router
 
 description: |
-  NemoClawd blueprint: orchestrates Clawd Box sandbox creation, migration,
-  and NIM/vLLM/ClawdRouter inference routing inside the Clawd Box sandbox runtime.
+  NemoClawd blueprint: orchestrates OpenShell sandbox creation, migration,
+  and NVIDIA NIM/vLLM inference routing inside the OpenShell sandbox runtime.
 
 components:
   sandbox:
-    image: "ghcr.io/8bitlabs/clawd-box/sandboxes/clawd:latest"
-    name: "clawd-box"
+    image: "ghcr.io/x402agent/nemoclawd:latest"
+    name: "nemoclawd"
     forward_ports:
       - 18789
 
@@ -52,19 +51,8 @@ components:
         credential_env: "OPENAI_API_KEY"
         credential_default: "dummy"
 
-      # ── ClawdRouter free tier ─────────────────────────────────────────────
-      # Uses the Clawd Box router for free LLM inference (79+ models).
-      # Requires CLAWD_ROUTER_KEY or the clawd_free_* bypass for provisioned agents.
-      clawd-router:
-        provider_type: "openai"
-        provider_name: "clawd-router"
-        endpoint: "https://clawd-box-router.fly.dev/v1"
-        model: "solana-clawd-1.5b"
-        credential_env: "CLAWD_ROUTER_KEY"
-        credential_default: "clawd_free_anonymous"
-
   policy:
-    base: "policies/clawd-box-sandbox.yaml"
+    base: "policies/openclaw-sandbox.yaml"
     additions:
       nim_service:
         name: nim_service

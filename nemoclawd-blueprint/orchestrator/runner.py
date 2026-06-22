@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-NemoClawd Blueprint Runner — Clawd Box edition
+NemoClawd Blueprint Runner — OpenShell edition
 
-Orchestrates Clawd Box sandbox lifecycle.
+Orchestrates OpenShell sandbox lifecycle.
 Called by the thin TS plugin via subprocess.
 
 Protocol:
@@ -11,8 +11,8 @@ Protocol:
   - exit code 0 = success, non-zero = failure
 
 CLI binary:
-  Uses `clawd-box` instead of `openshell`.
-  Override via env var CLAWD_BOX_CLI (e.g., for testing or alternate installs).
+  Uses `openshell`.
+  Override via env var OPENSHELL_CLI (e.g., for testing or alternate installs).
 """
 
 import argparse
@@ -28,11 +28,11 @@ from typing import Any
 
 import yaml
 
-# The CLI binary name — override with CLAWD_BOX_CLI env var for testing
-CLAWD_BOX_CLI = os.environ.get("CLAWD_BOX_CLI", "clawd-box")
+# The CLI binary name — override with OPENSHELL_CLI env var for testing
+OPENSHELL_CLI = os.environ.get("OPENSHELL_CLI", "openshell")
 
-# State lives under ~/.clawd-box/state/runs/
-STATE_ROOT = Path.home() / ".clawd-box" / "state" / "runs"
+# State lives under ~/.nemoclawd/state/runs/
+STATE_ROOT = Path.home() / ".nemoclawd" / "state" / "runs"
 
 
 def log(msg: str) -> None:
@@ -74,9 +74,9 @@ def run_cmd(
     )
 
 
-def clawd_box_available() -> bool:
-    """Check if clawd-box CLI is available."""
-    return shutil.which(CLAWD_BOX_CLI) is not None
+def openshell_available() -> bool:
+    """Check if the OpenShell CLI is available."""
+    return shutil.which(OPENSHELL_CLI) is not None
 
 
 # ---------------------------------------------------------------------------
@@ -104,10 +104,10 @@ def action_plan(
         sys.exit(1)
 
     progress(20, "Checking prerequisites")
-    if not clawd_box_available():
-        log(f"ERROR: {CLAWD_BOX_CLI} CLI not found. Install Clawd Box first.")
-        log("  See: https://github.com/8bitlabs/clawd-box")
-        log(f"  Or set CLAWD_BOX_CLI env var to point at your install.")
+    if not openshell_available():
+        log(f"ERROR: {OPENSHELL_CLI} CLI not found. Install OpenShell first.")
+        log("  See: https://github.com/NVIDIA/OpenShell")
+        log("  Or set OPENSHELL_CLI env var to point at your install.")
         sys.exit(1)
 
     sandbox_cfg: dict[str, Any] = blueprint.get("components", {}).get("sandbox", {})
@@ -120,8 +120,8 @@ def action_plan(
         "run_id": rid,
         "profile": profile,
         "sandbox": {
-            "image": sandbox_cfg.get("image", "ghcr.io/8bitlabs/clawd-box/sandboxes/clawd:latest"),
-            "name": sandbox_cfg.get("name", "clawd-box"),
+            "image": sandbox_cfg.get("image", "ghcr.io/x402agent/nemoclawd:latest"),
+            "name": sandbox_cfg.get("name", "nemoclawd"),
             "forward_ports": sandbox_cfg.get("forward_ports", [18789]),
         },
         "inference": {
@@ -164,16 +164,16 @@ def action_apply(
 
     sandbox_cfg: dict[str, Any] = blueprint.get("components", {}).get("sandbox", {})
 
-    sandbox_name: str = sandbox_cfg.get("name", "clawd-box")
+    sandbox_name: str = sandbox_cfg.get("name", "nemoclawd")
     sandbox_image: str = sandbox_cfg.get(
-        "image", "ghcr.io/8bitlabs/clawd-box/sandboxes/clawd:latest"
+        "image", "ghcr.io/x402agent/nemoclawd:latest"
     )
     forward_ports: list[int] = sandbox_cfg.get("forward_ports", [18789])
 
     # Step 1: Create sandbox
-    progress(20, "Creating Clawd Box sandbox")
+    progress(20, "Creating OpenShell sandbox")
     create_args = [
-        CLAWD_BOX_CLI,
+        OPENSHELL_CLI,
         "sandbox",
         "create",
         "--from",
@@ -206,7 +206,7 @@ def action_apply(
         credential = os.environ.get(credential_env, credential_default)
 
     provider_args = [
-        CLAWD_BOX_CLI,
+        OPENSHELL_CLI,
         "provider",
         "create",
         "--name",
@@ -224,7 +224,7 @@ def action_apply(
     # Step 3: Set inference route
     progress(70, "Setting inference route")
     run_cmd(
-        [CLAWD_BOX_CLI, "inference", "set", "--provider", provider_name, "--model", model],
+        [OPENSHELL_CLI, "inference", "set", "--provider", provider_name, "--model", model],
         check=False,
         capture=True,
     )
@@ -286,18 +286,18 @@ def action_rollback(rid: str) -> None:
     plan_file = state_dir / "plan.json"
     if plan_file.exists():
         plan = json.loads(plan_file.read_text())
-        sandbox_name = plan.get("sandbox_name", "clawd-box")
+        sandbox_name = plan.get("sandbox_name", "nemoclawd")
 
         progress(30, f"Stopping sandbox {sandbox_name}")
         run_cmd(
-            [CLAWD_BOX_CLI, "sandbox", "stop", sandbox_name],
+            [OPENSHELL_CLI, "sandbox", "stop", sandbox_name],
             check=False,
             capture=True,
         )
 
         progress(60, f"Removing sandbox {sandbox_name}")
         run_cmd(
-            [CLAWD_BOX_CLI, "sandbox", "remove", sandbox_name],
+            [OPENSHELL_CLI, "sandbox", "remove", sandbox_name],
             check=False,
             capture=True,
         )
@@ -314,7 +314,7 @@ def action_rollback(rid: str) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="NemoClawd Blueprint Runner — Clawd Box edition")
+    parser = argparse.ArgumentParser(description="NemoClawd Blueprint Runner — OpenShell edition")
     parser.add_argument("action", choices=["plan", "apply", "status", "rollback"])
     parser.add_argument("--profile", default="default")
     parser.add_argument("--plan", dest="plan_path")
