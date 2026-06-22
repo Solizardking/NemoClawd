@@ -6,7 +6,7 @@
   <code>8cHzQHUS2s2h8TzCmfqPKYiM4dSt4roa3n7MyRLApump</code>
 </p>
 <p align="center">
-  <a href="https://www.npmjs.com/package/nemoclawd"><img src="https://img.shields.io/npm/v/nemoclawd.svg?style=flat-square&color=cb3837" alt="npm"></a>
+  <img src="https://img.shields.io/badge/npm-package%20renamed%20locally-lightgrey?style=flat-square" alt="npm package renamed locally">
   <a href="https://github.com/x402agent/NemoClawd/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/status-alpha-orange?style=flat-square" alt="Status">
   <img src="https://img.shields.io/badge/Solana-Mainnet-9945FF?style=flat-square&logo=solana&logoColor=white" alt="Solana">
@@ -53,13 +53,39 @@
 ### Quick Start
 
 ```bash
-npm install -g @mawdbotsonsolana/nemoclawd
+git clone https://github.com/x402agent/NemoClawd.git
+cd NemoClawd
+npm install
+npm run build
+npm link
 
 # Start with Grok + Solana tools
 nemoclawd launch
+```
 
-# Run demo walkthrough
-nemoclawd demo
+The renamed npm package is `@mawdbotsonsolana/nemoclawd`. It is not published on npm yet, so source checkout plus `npm link` is the smoke-tested install path for this repo.
+
+### OpenShell Runtime
+
+NemoClawd runs OpenClaw inside NVIDIA OpenShell sandboxes. Install OpenShell directly when you want to manage gateways, policy, or inference outside the wrapper CLI:
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/install.sh | sh
+
+# Alternative with uv
+uv tool install -U openshell
+```
+
+This repo pins `openclaw` to `2026.6.9`. The OpenShell installer supports `OPENSHELL_VERSION` for pinned or dev-channel installs.
+
+### Local Smoke Test
+
+```bash
+node bin/nemoclawd.js --help
+node bin/nemoclawd.js version
+npm test
+npm run build
+npm pack --dry-run --cache /tmp/nemoclawd-npm-cache
 ```
 
 ### xAI Grok Setup
@@ -132,7 +158,7 @@ LEARN    → write INFERRED signals → Dream agent promotes to LEARNED
 Every `nemoClawd` user gets a companion — a procedurally generated Blockchain Buddy with its own wallet, trading personality, stats, and animated ASCII sprite.
 
 ```bash
-nemoclawd birth   # hatch yours now
+nemoclawd wallet create
 ```
 
 ### Species (18 total)
@@ -166,7 +192,7 @@ nemoclawd birth   # hatch yours now
 ## Deploy to Fly.io
 
 ```bash
-cd MCP
+cd nemoclawd-mcp
 fly launch --config fly.toml
 fly secrets set HELIUS_API_KEY=your-key XAI_API_KEY=your-key MCP_API_KEY=optional-bearer-token
 ```

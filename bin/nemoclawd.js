@@ -1078,7 +1078,9 @@ function help() {
   nemoclawd — Autonomous Solana Trading Agent
 
   ⚡ Fastest path:
-    npm install -g @mawdbotsonsolana/nemoclawd
+    npm install
+    npm run build
+    npm link
     nemoclawd launch
 
   Getting Started:
