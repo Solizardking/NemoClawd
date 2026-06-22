@@ -1,4 +1,4 @@
-# NemoClawd sandbox image — Clawd + NemoClawd plugin inside Clawd Box
+# NemoClawd sandbox image — OpenClaw + NemoClawd plugin inside OpenShell
 # Uses Alpine for minimal attack surface
 
 FROM node:22-alpine
@@ -33,13 +33,13 @@ RUN set -eux; \
       fi; \
     fi
 
-# Create sandbox user (matches Clawd Box convention)
+# Create sandbox user used by OpenShell sandbox images
 RUN addgroup -S sandbox && adduser -S -G sandbox -h /sandbox sandbox \
-    && mkdir -p /sandbox/.clawd /sandbox/.clawd-box \
+    && mkdir -p /sandbox/.openclaw /sandbox/.nemoclawd \
     && chown -R sandbox:sandbox /sandbox
 
-# Install Clawd CLI
-RUN npm install -g clawd@2026.3.11
+# Install OpenClaw CLI
+RUN npm install -g openclaw@2026.6.9
 
 # Install PyYAML for blueprint runner
 RUN pip3 install --break-system-packages pyyaml
@@ -89,8 +89,8 @@ WORKDIR /opt/pump-fun/x402
 RUN npm install
 
 # Set up blueprint for local resolution
-RUN mkdir -p /sandbox/.clawd-box/blueprints/0.1.0 \
-    && cp -r /opt/nemoclawd-blueprint/* /sandbox/.clawd-box/blueprints/0.1.0/
+RUN mkdir -p /sandbox/.nemoclawd/blueprints/0.1.0 \
+    && cp -r /opt/nemoclawd-blueprint/* /sandbox/.nemoclawd/blueprints/0.1.0/
 
 # Copy startup scripts
 COPY scripts/nemoclawd-start.sh       /usr/local/bin/nemoclawd-start
@@ -116,13 +116,13 @@ RUN npm install -g helius-cli 2>/dev/null || echo 'WARN: helius-cli install skip
 WORKDIR /sandbox
 USER sandbox
 
-RUN mkdir -p /sandbox/.clawd/agents/main/agent \
-    && mkdir -p /sandbox/.clawd/workspace/skills/privy \
-    && mkdir -p /sandbox/.clawd-box/wallets \
-    && chmod 700 /sandbox/.clawd \
-    && chmod 700 /sandbox/.clawd-box/wallets
+RUN mkdir -p /sandbox/.openclaw/agents/main/agent \
+    && mkdir -p /sandbox/.openclaw/workspace/skills/privy \
+    && mkdir -p /sandbox/.nemoclawd/wallets \
+    && chmod 700 /sandbox/.openclaw \
+    && chmod 700 /sandbox/.nemoclawd/wallets
 
-RUN cat > /sandbox/.clawd/workspace/skills/privy/SKILL.md <<'PRIVY_SKILL'
+RUN cat > /sandbox/.openclaw/workspace/skills/privy/SKILL.md <<'PRIVY_SKILL'
 ---
 name: privy-agentic-wallets
 description: |
@@ -151,32 +151,26 @@ curl -X POST https://auth.privy.io/api/v1/wallets \
 - Only fund wallets with amounts you can afford to lose
 PRIVY_SKILL
 
-# Write clawd.json: nvidia + clawd-router providers via Clawd Box gateway
+# Write openclaw.json: NVIDIA provider via OpenShell inference routing
 RUN python3 -c "\
 import json, os; \
 config = { \
     'agents': {'defaults': {'model': {'primary': 'nvidia/nemotron-3-super-120b-a12b'}}}, \
     'models': {'mode': 'merge', 'providers': { \
         'nvidia': { \
-            'baseUrl': 'https://inference.clawd-box.internal/v1', \
-            'apiKey': 'clawd-box-managed', \
+            'baseUrl': 'https://integrate.api.nvidia.com/v1', \
+            'apiKey': 'env:NVIDIA_API_KEY', \
             'api': 'openai-completions', \
             'models': [{'id': 'nemotron-3-super-120b-a12b', 'name': 'NVIDIA Nemotron 3 Super 120B', 'reasoning': True, 'input': ['text'], 'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0}, 'contextWindow': 131072, 'maxTokens': 8192}] \
-        }, \
-        'clawd-router': { \
-            'baseUrl': 'https://clawd-box-router.fly.dev/v1', \
-            'apiKey': 'clawd_free_anonymous', \
-            'api': 'openai-completions', \
-            'models': [{'id': 'solana-clawd-1.5b', 'name': 'Solana Clawd 1.5B', 'reasoning': False, 'input': ['text'], 'cost': {'input': 0, 'output': 0, 'cacheRead': 0, 'cacheWrite': 0}, 'contextWindow': 32768, 'maxTokens': 2048}] \
         } \
     }} \
 }; \
-path = os.path.expanduser('~/.clawd/clawd.json'); \
+path = os.path.expanduser('~/.openclaw/openclaw.json'); \
 json.dump(config, open(path, 'w'), indent=2); \
 os.chmod(path, 0o600)"
 
-RUN clawd doctor --fix > /dev/null 2>&1 || true \
-    && clawd plugins install /opt/nemoclawd > /dev/null 2>&1 || true
+RUN openclaw doctor --fix > /dev/null 2>&1 || true \
+    && openclaw plugins install /opt/nemoclawd > /dev/null 2>&1 || true
 
 ENTRYPOINT ["/bin/bash"]
 CMD []

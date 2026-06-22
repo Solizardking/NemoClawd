@@ -33,7 +33,7 @@ RUN set -eux; \
 RUN pip3 install --break-system-packages pyyaml
 
 # Install OpenClaw CLI
-RUN npm install -g openclaw@2026.3.11
+RUN npm install -g openclaw@2026.6.9
 
 # Install Helius CLI
 RUN npm install -g helius-cli 2>/dev/null || echo 'WARN: helius-cli install skipped'
