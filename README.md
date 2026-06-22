@@ -50,6 +50,8 @@
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+<!-- start-quickstart-guide -->
+
 ### Quick Start
 
 ```bash
@@ -87,6 +89,8 @@ npm test
 npm run build
 npm pack --dry-run --cache /tmp/nemoclawd-npm-cache
 ```
+
+<!-- end-quickstart-guide -->
 
 ### xAI Grok Setup
 

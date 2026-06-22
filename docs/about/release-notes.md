@@ -22,6 +22,12 @@ status: published
 
 NemoClawd is in active development and follows a frequent release cadence. Use the following GitHub resources directly.
 
+## 2026-06-22
+
+- Renamed local package, CLI, plugin, MCP server, blueprint paths, scripts, state directories, and docs from `nemoclaw` to `nemoclawd`.
+- Updated the OpenClaw runtime pin to `2026.6.9` and aligned OpenShell installation docs with NVIDIA's current upstream installer and `uv tool install -U openshell` path.
+- Synced docs with NVIDIA upstream v0.0.64 themes: restore safety for custom policy presets, more stable OpenClaw onboarding, chat-completions fallback for NVIDIA/NIM-compatible routes, and messaging setup recovery.
+
 | Resource | Description |
 |---|---|
 | [Releases](https://github.com/x402agent/NemoClawd/releases) | Versioned release notes and downloadable assets. |
