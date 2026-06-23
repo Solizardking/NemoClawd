@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""
-NemoClawd Blueprint Runner — OpenShell edition
+"""NemoClawd Blueprint Runner — OpenClawd edition
 
-Orchestrates OpenShell sandbox lifecycle.
+Orchestrates OpenClawd sandbox lifecycle.
 Called by the thin TS plugin via subprocess.
 
 Protocol:
@@ -11,8 +10,8 @@ Protocol:
   - exit code 0 = success, non-zero = failure
 
 CLI binary:
-  Uses `openshell`.
-  Override via env var OPENSHELL_CLI (e.g., for testing or alternate installs).
+  Uses `openclawd`.
+  Override via env var OPENCLAWD_CLI for testing or alternate installs.
 """
 
 import argparse
@@ -28,8 +27,13 @@ from typing import Any
 
 import yaml
 
-# The CLI binary name — override with OPENSHELL_CLI env var for testing
-OPENSHELL_CLI = os.environ.get("OPENSHELL_CLI", "openshell")
+if __package__:
+    from .oracle import build_oracle_plan
+else:
+    from oracle import build_oracle_plan
+
+# The CLI binary name — override with OPENCLAWD_CLI for testing or alternate installs.
+OPENCLAWD_CLI = os.environ.get("OPENCLAWD_CLI", "openclawd")
 
 # State lives under ~/.nemoclawd/state/runs/
 STATE_ROOT = Path.home() / ".nemoclawd" / "state" / "runs"
@@ -44,7 +48,7 @@ def progress(pct: int, label: str) -> None:
 
 
 def emit_run_id() -> str:
-    rid = f"cb-{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:8]}"
+    rid = f"nb-{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:8]}"
     print(f"RUN_ID:{rid}", flush=True)
     return rid
 
@@ -74,9 +78,9 @@ def run_cmd(
     )
 
 
-def openshell_available() -> bool:
-    """Check if the OpenShell CLI is available."""
-    return shutil.which(OPENSHELL_CLI) is not None
+def openclawd_available() -> bool:
+    """Check if the OpenClawd CLI is available."""
+    return shutil.which(OPENCLAWD_CLI) is not None
 
 
 # ---------------------------------------------------------------------------
@@ -104,18 +108,19 @@ def action_plan(
         sys.exit(1)
 
     progress(20, "Checking prerequisites")
-    if not openshell_available():
-        log(f"ERROR: {OPENSHELL_CLI} CLI not found. Install OpenShell first.")
-        log("  See: https://github.com/NVIDIA/OpenShell")
-        log("  Or set OPENSHELL_CLI env var to point at your install.")
+    if not openclawd_available():
+        log(f"ERROR: {OPENCLAWD_CLI} CLI not found. Install OpenClawd first.")
+        log("  Or set OPENCLAWD_CLI env var to point at your install.")
         sys.exit(1)
 
     sandbox_cfg: dict[str, Any] = blueprint.get("components", {}).get("sandbox", {})
     inference_cfg: dict[str, Any] = inference_profiles[profile]
+    policy_cfg: dict[str, Any] = blueprint.get("components", {}).get("policy", {})
 
     if endpoint_url:
         inference_cfg = {**inference_cfg, "endpoint": endpoint_url}
 
+    oracle_plan = build_oracle_plan(blueprint)
     plan: dict[str, Any] = {
         "run_id": rid,
         "profile": profile,
@@ -131,9 +136,13 @@ def action_plan(
             "model": inference_cfg.get("model"),
             "credential_env": inference_cfg.get("credential_env"),
         },
-        "policy_additions": (
-            blueprint.get("components", {}).get("policy", {}).get("additions", {})
-        ),
+        "blockchain_oracle": oracle_plan,
+        "policy": {
+            "base": policy_cfg.get("base"),
+            "presets": policy_cfg.get("presets", []),
+            "additions": policy_cfg.get("additions", {}),
+        },
+        "policy_additions": (policy_cfg.get("additions", {})),
         "dry_run": dry_run,
     }
 
@@ -162,18 +171,17 @@ def action_apply(
     if endpoint_url:
         inference_cfg = {**inference_cfg, "endpoint": endpoint_url}
 
+    oracle_plan = build_oracle_plan(blueprint)
     sandbox_cfg: dict[str, Any] = blueprint.get("components", {}).get("sandbox", {})
 
     sandbox_name: str = sandbox_cfg.get("name", "nemoclawd")
-    sandbox_image: str = sandbox_cfg.get(
-        "image", "ghcr.io/x402agent/nemoclawd:latest"
-    )
+    sandbox_image: str = sandbox_cfg.get("image", "ghcr.io/x402agent/nemoclawd:latest")
     forward_ports: list[int] = sandbox_cfg.get("forward_ports", [18789])
 
     # Step 1: Create sandbox
-    progress(20, "Creating OpenShell sandbox")
+    progress(20, "Creating OpenClawd sandbox")
     create_args = [
-        OPENSHELL_CLI,
+        OPENCLAWD_CLI,
         "sandbox",
         "create",
         "--from",
@@ -206,7 +214,7 @@ def action_apply(
         credential = os.environ.get(credential_env, credential_default)
 
     provider_args = [
-        OPENSHELL_CLI,
+        OPENCLAWD_CLI,
         "provider",
         "create",
         "--name",
@@ -224,7 +232,7 @@ def action_apply(
     # Step 3: Set inference route
     progress(70, "Setting inference route")
     run_cmd(
-        [OPENSHELL_CLI, "inference", "set", "--provider", provider_name, "--model", model],
+        [OPENCLAWD_CLI, "inference", "set", "--provider", provider_name, "--model", model],
         check=False,
         capture=True,
     )
@@ -240,6 +248,7 @@ def action_apply(
                 "profile": profile,
                 "sandbox_name": sandbox_name,
                 "inference": inference_cfg,
+                "blockchain_oracle": oracle_plan,
                 "timestamp": datetime.now(UTC).isoformat(),
             },
             indent=2,
@@ -249,6 +258,11 @@ def action_apply(
     progress(100, "Apply complete")
     log(f"Sandbox '{sandbox_name}' is ready.")
     log(f"Inference: {provider_name} -> {model} @ {endpoint}")
+    if oracle_plan.get("enabled"):
+        log(
+            "Blockchain oracle MCP: "
+            f"{oracle_plan.get('command')} {' '.join(oracle_plan.get('args', []))}"
+        )
 
 
 def action_status(rid: str | None = None) -> None:
@@ -290,14 +304,14 @@ def action_rollback(rid: str) -> None:
 
         progress(30, f"Stopping sandbox {sandbox_name}")
         run_cmd(
-            [OPENSHELL_CLI, "sandbox", "stop", sandbox_name],
+            [OPENCLAWD_CLI, "sandbox", "stop", sandbox_name],
             check=False,
             capture=True,
         )
 
         progress(60, f"Removing sandbox {sandbox_name}")
         run_cmd(
-            [OPENSHELL_CLI, "sandbox", "remove", sandbox_name],
+            [OPENCLAWD_CLI, "sandbox", "remove", sandbox_name],
             check=False,
             capture=True,
         )
@@ -314,7 +328,7 @@ def action_rollback(rid: str) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="NemoClawd Blueprint Runner — OpenShell edition")
+    parser = argparse.ArgumentParser(description="NemoClawd Blueprint Runner — OpenClawd edition")
     parser.add_argument("action", choices=["plan", "apply", "status", "rollback"])
     parser.add_argument("--profile", default="default")
     parser.add_argument("--plan", dest="plan_path")

@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+preset:
+  name: hermes-blockchain-oracle
+  description: "Read-only Solana RPC and Helius access for the NemoClawd blockchain oracle"
+
+network_policies:
+  hermes_blockchain_oracle:
+    name: hermes_blockchain_oracle
+    endpoints:
+      - host: api.mainnet-beta.solana.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        tls: terminate
+        rules:
+          - allow: { method: POST, path: "/**" }
+      - host: api.devnet.solana.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        tls: terminate
+        rules:
+          - allow: { method: POST, path: "/**" }
+      - host: "*.helius-rpc.com"
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        tls: terminate
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**" }
+      - host: api.helius.xyz
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        tls: terminate
+        rules:
+          - allow: { method: GET, path: "/v0/**" }
+          - allow: { method: POST, path: "/v0/**" }
+    binaries:
+      - { path: /usr/local/bin/openclawd }
+      - { path: /usr/local/bin/python }
+      - { path: /usr/bin/python3 }

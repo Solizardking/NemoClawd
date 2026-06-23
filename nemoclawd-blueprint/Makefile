@@ -1,4 +1,4 @@
-.PHONY: lint format check
+.PHONY: lint format check test
 
 lint:
 	ruff check .
@@ -10,3 +10,7 @@ format:
 check:
 	ruff check .
 	ruff format --check .
+	PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests
+
+test:
+	PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests

@@ -3,16 +3,17 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
-Migration snapshot/restore logic for moving host OpenClaw into OpenShell sandbox.
+Migration snapshot/restore logic for moving host OpenClawd into the NemoClawd sandbox.
 
 Handles:
-  - Snapshot: capture ~/.openclaw config, workspace, extensions, skills
+  - Snapshot: capture ~/.openclawd config, workspace, extensions, skills
   - Restore: push snapshot contents into sandbox filesystem
-  - Cutover: rename host config to archived, point OpenClaw at sandbox
+  - Cutover: rename host config to archived, point OpenClawd at sandbox
   - Rollback: restore host config from snapshot
 """
 
 import json
+import os
 import shutil
 import subprocess
 from datetime import UTC, datetime
@@ -20,29 +21,30 @@ from pathlib import Path
 from typing import Any
 
 HOME = Path.home()
-OPENCLAW_DIR = HOME / ".openclaw"
+OPENCLAWD_DIR = HOME / ".openclawd"
 NEMOCLAWD_DIR = HOME / ".nemoclawd"
 SNAPSHOTS_DIR = NEMOCLAWD_DIR / "snapshots"
+OPENCLAWD_CLI = os.environ.get("OPENCLAWD_CLI", "openclawd")
 
 
 def create_snapshot() -> Path | None:
-    """Snapshot the current host OpenClaw configuration."""
-    if not OPENCLAW_DIR.exists():
+    """Snapshot the current host OpenClawd configuration."""
+    if not OPENCLAWD_DIR.exists():
         return None
 
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     snapshot_dir = SNAPSHOTS_DIR / timestamp
     snapshot_dir.mkdir(parents=True, exist_ok=True)
 
-    # Copy the entire ~/.openclaw directory
-    dest = snapshot_dir / "openclaw"
-    shutil.copytree(OPENCLAW_DIR, dest, dirs_exist_ok=True)
+    # Copy the entire ~/.openclawd directory
+    dest = snapshot_dir / "openclawd"
+    shutil.copytree(OPENCLAWD_DIR, dest, dirs_exist_ok=True)
 
     # Write manifest
     contents = [str(p.relative_to(dest)) for p in dest.rglob("*") if p.is_file()]
     manifest: dict[str, Any] = {
         "timestamp": timestamp,
-        "source": str(OPENCLAW_DIR),
+        "source": str(OPENCLAWD_DIR),
         "file_count": len(contents),
         "contents": contents,
     }
@@ -51,15 +53,21 @@ def create_snapshot() -> Path | None:
     return snapshot_dir
 
 
-def restore_into_sandbox(snapshot_dir: Path, sandbox_name: str = "openclaw") -> bool:
-    """Push snapshot contents into a running OpenShell sandbox."""
-    source = snapshot_dir / "openclaw"
+def restore_into_sandbox(snapshot_dir: Path, sandbox_name: str = "nemoclawd") -> bool:
+    """Push snapshot contents into a running OpenClawd sandbox."""
+    source = snapshot_dir / "openclawd"
     if not source.exists():
         return False
 
-    # Use openshell sandbox cp to push files into the sandbox filesystem
+    # Use OpenClawd sandbox cp to push files into the sandbox filesystem.
     result = subprocess.run(
-        ["openshell", "sandbox", "cp", str(source), f"{sandbox_name}:/sandbox/.openclaw"],
+        [
+            OPENCLAWD_CLI,
+            "sandbox",
+            "cp",
+            str(source),
+            f"{sandbox_name}:/sandbox/.openclawd",
+        ],
         capture_output=True,
         text=True,
         check=False,
@@ -68,15 +76,15 @@ def restore_into_sandbox(snapshot_dir: Path, sandbox_name: str = "openclaw") -> 
 
 
 def cutover_host(snapshot_dir: Path) -> bool:
-    """Archive host ~/.openclaw and mark migration as complete."""
-    if not OPENCLAW_DIR.exists():
+    """Archive host ~/.openclawd and mark migration as complete."""
+    if not OPENCLAWD_DIR.exists():
         return True  # Nothing to archive
 
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    archive_path = OPENCLAW_DIR.parent / f".openclaw.pre-nemoclawd.{timestamp}"
+    archive_path = OPENCLAWD_DIR.parent / f".openclawd.pre-nemoclawd.{timestamp}"
 
     try:
-        shutil.move(str(OPENCLAW_DIR), str(archive_path))
+        shutil.move(str(OPENCLAWD_DIR), str(archive_path))
     except OSError:
         return False
     else:
@@ -84,18 +92,18 @@ def cutover_host(snapshot_dir: Path) -> bool:
 
 
 def rollback_from_snapshot(snapshot_dir: Path) -> bool:
-    """Restore host ~/.openclaw from a snapshot."""
-    source = snapshot_dir / "openclaw"
+    """Restore host ~/.openclawd from a snapshot."""
+    source = snapshot_dir / "openclawd"
     if not source.exists():
         return False
 
     # Archive current config if it exists
-    if OPENCLAW_DIR.exists():
+    if OPENCLAWD_DIR.exists():
         timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-        archive_path = OPENCLAW_DIR.parent / f".openclaw.nemoclawd-archived.{timestamp}"
-        shutil.move(str(OPENCLAW_DIR), str(archive_path))
+        archive_path = OPENCLAWD_DIR.parent / f".openclawd.nemoclawd-archived.{timestamp}"
+        shutil.move(str(OPENCLAWD_DIR), str(archive_path))
 
-    shutil.copytree(source, OPENCLAW_DIR)
+    shutil.copytree(source, OPENCLAWD_DIR)
     return True
 
 

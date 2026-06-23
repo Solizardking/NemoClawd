@@ -1,5 +1,5 @@
 version: "0.1.0"
-min_openshell_version: "2026.6.0"
+min_openclawd_version: "2026.6.0"
 min_nemoclawd_version: "2026.3.0"
 digest: ""  # Computed at release time
 
@@ -10,8 +10,8 @@ profiles:
   - vllm
 
 description: |
-  NemoClawd blueprint: orchestrates OpenShell sandbox creation, migration,
-  and NVIDIA NIM/vLLM inference routing inside the OpenShell sandbox runtime.
+  NemoClawd blueprint: orchestrates OpenClawd sandbox creation, migration,
+  and NVIDIA NIM/vLLM inference routing inside the OpenClawd sandbox runtime.
 
 components:
   sandbox:
@@ -51,8 +51,41 @@ components:
         credential_env: "OPENAI_API_KEY"
         credential_default: "dummy"
 
+  blockchain_oracle:
+    enabled: true
+    name: "nemoclawd-blockchain-oracle"
+    upstream: "hermes-blockchain-oracle"
+    description: "Solana wallet, token, transaction, NFT, whale, and network intelligence MCP server."
+    transport: "stdio"
+    package: "hermes-blockchain-oracle"
+    command: "python"
+    args:
+      - "-m"
+      - "hermes_blockchain_oracle"
+    env:
+      SOLANA_RPC_URL: "${SOLANA_RPC_URL:-https://api.mainnet-beta.solana.com}"
+      RPC_URL: "${RPC_URL:-}"
+      HELIUS_API_KEY: "${HELIUS_API_KEY:-}"
+      CLAWD_TOKEN: "8cHzQHUS2s2h8TzCmfqPKYiM4dSt4roa3n7MyRLApump"
+      WHALE_THRESHOLD_SOL: "1000"
+      CACHE_TTL_SECONDS: "30"
+    tools:
+      - solana_wallet_info
+      - solana_transaction
+      - solana_token_info
+      - solana_recent_activity
+      - solana_nft_portfolio
+      - whale_detector
+      - solana_network_stats
+    policy_presets:
+      - "policies/presets/solana-rpc.yaml"
+      - "policies/presets/hermes-blockchain-oracle.yaml"
+
   policy:
-    base: "policies/openclaw-sandbox.yaml"
+    base: "policies/openclawd-sandbox.yaml"
+    presets:
+      - "policies/presets/solana-rpc.yaml"
+      - "policies/presets/hermes-blockchain-oracle.yaml"
     additions:
       nim_service:
         name: nim_service

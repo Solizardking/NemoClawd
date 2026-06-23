@@ -1,17 +1,17 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-# Strict baseline policy for the OpenClaw sandbox.
+# Strict baseline policy for the OpenClawd/NemoClawd sandbox.
 # Principle: deny by default, allow only what's needed for core functionality.
 # Dynamic updates (network_policies, inference) can be applied post-creation
-# via `openshell policy set`. Static fields are effectively creation-locked.
+# via `openclawd policy set`. Static fields are effectively creation-locked.
 #
 # Policy tiers (future):
 #   strict  — this file. Minimum for onboard + basic agent operation.
 #   relaxed — adds third-party model providers, broader web access.
 #
-# To add endpoints: update this file and re-run `openclaw nemoclawd migrate`
-# or apply dynamically via `openshell policy set`.
+# To add endpoints: update this file and re-run `openclawd nemoclawd migrate`
+# or apply dynamically via `openclawd policy set`.
 
 version: 1
 
@@ -78,7 +78,7 @@ network_policies:
           - allow: { method: "*", path: "/**" }
     binaries:
       - { path: /usr/local/bin/claude }
-      - { path: /usr/local/bin/openclaw }
+      - { path: /usr/local/bin/openclawd }
 
   github:
     name: github
@@ -93,16 +93,16 @@ network_policies:
       - { path: /usr/bin/gh }
       - { path: /usr/bin/git }
 
-  # ── OpenClaw "phone home" ────────────────────────────────────────────
-  # Minimum viable set for OpenClaw to authenticate, discover plugins,
-  # and reach ClawHub. Binary-restricted to openclaw only.
-  # Docs access is read-only (GET). ClawHub and openclaw.ai are
+  # ── OpenClawd "phone home" ────────────────────────────────────────────
+  # Minimum viable set for OpenClawd to authenticate, discover plugins,
+  # and reach ClawdHub. Binary-restricted to openclawd only.
+  # Docs access is read-only (GET). ClawdHub and openclawd.ai are
   # restricted to GET+POST (auth flows, plugin discovery).
 
-  clawhub:
-    name: clawhub
+  clawdhub:
+    name: clawdhub
     endpoints:
-      - host: clawhub.com
+      - host: clawdhub.com
         port: 443
         protocol: rest
         enforcement: enforce
@@ -111,12 +111,12 @@ network_policies:
           - allow: { method: GET, path: "/**" }
           - allow: { method: POST, path: "/**" }
     binaries:
-      - { path: /usr/local/bin/openclaw }
+      - { path: /usr/local/bin/openclawd }
 
-  openclaw_api:
-    name: openclaw_api
+  openclawd_api:
+    name: openclawd_api
     endpoints:
-      - host: openclaw.ai
+      - host: openclawd.ai
         port: 443
         protocol: rest
         enforcement: enforce
@@ -125,12 +125,12 @@ network_policies:
           - allow: { method: GET, path: "/**" }
           - allow: { method: POST, path: "/**" }
     binaries:
-      - { path: /usr/local/bin/openclaw }
+      - { path: /usr/local/bin/openclawd }
 
-  openclaw_docs:
-    name: openclaw_docs
+  openclawd_docs:
+    name: openclawd_docs
     endpoints:
-      - host: docs.openclaw.ai
+      - host: docs.openclawd.ai
         port: 443
         protocol: rest
         enforcement: enforce
@@ -138,9 +138,9 @@ network_policies:
         rules:
           - allow: { method: GET, path: "/**" }
     binaries:
-      - { path: /usr/local/bin/openclaw }
+      - { path: /usr/local/bin/openclawd }
 
-  # npm registry — needed for `openclaw plugins install` and `npm install`
+  # npm registry — needed for `openclawd plugins install` and `npm install`
   npm_registry:
     name: npm_registry
     endpoints:
@@ -148,7 +148,7 @@ network_policies:
         port: 443
         access: full
     binaries:
-      - { path: /usr/local/bin/openclaw }
+      - { path: /usr/local/bin/openclawd }
       - { path: /usr/local/bin/npm }
 
   # ── Messaging — pre-allowed for agent notifications ────────────
@@ -168,16 +168,16 @@ network_policies:
 
   # ── Ollama (local inference) ───────────────────────────────────
   # Allow sandbox to reach Ollama on the host for DeepSolana / any
-  # local model. Uses host.openshell.internal (Docker host alias).
+  # local model. Uses host.openclawd.internal (Docker host alias).
   ollama:
     name: ollama
     endpoints:
-      - host: host.openshell.internal
+      - host: host.openclawd.internal
         port: 11434
         protocol: rest
         enforcement: enforce
         rules:
           - allow: { method: "*", path: "/**" }
     binaries:
-      - { path: /usr/local/bin/openclaw }
+      - { path: /usr/local/bin/openclawd }
       - { path: /usr/bin/curl }
