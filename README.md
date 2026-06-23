@@ -1,327 +1,276 @@
 <p align="center">
-  <strong>🦀 nemoClawd</strong><br/>
-  <em>Solana x xAI Agentic Trading Engine — Powered by $CLAWD</em>
+  <strong>🦞 NemoClawd</strong><br/>
+  <em>OpenClawd + NVIDIA + Solana agents, with a lobster at the controls</em>
 </p>
+
 <p align="center">
-  <code>8cHzQHUS2s2h8TzCmfqPKYiM4dSt4roa3n7MyRLApump</code>
+  <code>$CLAWD: 8cHzQHUS2s2h8TzCmfqPKYiM4dSt4roa3n7MyRLApump</code>
 </p>
+
 <p align="center">
-  <img src="https://img.shields.io/badge/npm-package%20renamed%20locally-lightgrey?style=flat-square" alt="npm package renamed locally">
-  <a href="https://github.com/x402agent/NemoClawd/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square" alt="License"></a>
-  <img src="https://img.shields.io/badge/status-alpha-orange?style=flat-square" alt="Status">
-  <img src="https://img.shields.io/badge/Solana-Mainnet-9945FF?style=flat-square&logo=solana&logoColor=white" alt="Solana">
-  <img src="https://img.shields.io/badge/OpenRouter-z--ai%2Fglm--5.2-black?style=flat-square" alt="OpenRouter z-ai/glm-5.2">
-  <img src="https://img.shields.io/badge/MCP-31%20tools-blueviolet?style=flat-square" alt="MCP Tools">
-  <img src="https://img.shields.io/badge/Multi--Agent-4--16%20agents-purple?style=flat-square" alt="Multi-Agent">
+  <img src="https://img.shields.io/badge/OpenClawd-blue?style=flat-square" alt="OpenClawd">
+  <img src="https://img.shields.io/badge/NVIDIA-NIM%20%2B%20vLLM-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="NVIDIA NIM and vLLM">
+  <img src="https://img.shields.io/badge/MCP-37%20tools-blueviolet?style=flat-square" alt="37 MCP tools">
+  <img src="https://img.shields.io/badge/Solana-mainnet-9945FF?style=flat-square&logo=solana&logoColor=white" alt="Solana">
+  <img src="https://img.shields.io/badge/Phoenix-Perps-orange?style=flat-square" alt="Phoenix Perps">
+  <img src="https://img.shields.io/badge/Hermes-Oracle-lightgrey?style=flat-square" alt="Hermes Blockchain Oracle">
 </p>
 
 ---
 
-## solana-clawd Integration
+## What This Is
 
-**nemoClawd** now integrates **solana-clawd** — the full xAI Grok-powered agentic framework for Solana trading, research, and autonomous agent operations.
+NemoClawd is a Solana-native agent stack that now ties together:
 
-### What You Get
+- **OpenClawd/NemoClawd blueprint runtime** for sandbox planning, migration, policy, and inference routing.
+- **NVIDIA inference routes** for hosted NIM, NCP, local NIM, and local vLLM profiles.
+- **nemoClawd MCP** with **37 tools** across Solana data, Helius, Pump.fun, xAI Grok, and Clawd Perps.
+- **Clawd Perps** safety tooling with preflight gates, paper previews, live-preview blocking, and Vulcan plan generation.
+- **Hermes-style blockchain oracle** planning for read-only Solana wallet, token, transaction, NFT, whale, and network intelligence.
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│   xAI Grok Integration ─── 4-16 Grok agents with web + X search  │
-│   │                     Chat, vision, image gen, voice          │
-│   │                                                             │
-│   $CLAWD Token ───────── 8cHzQHUS2s2h8TzCmfqPKYiM4dSt4roa3n7MyRLApump │
-│   │                     Solana + Pump.fun native                │
-│   │                                                             │
-│   31 MCP Tools ───────── Solana market data, trading, NFTs      │
-│   │                     Helius RPC/DAS, Pump.fun SDK            │
-│   │                                                             │
-│   Phoenix Perps ──────── Vulcan CLI/MCP for Phoenix futures     │
-│   │                     Paper trading + gated live mode         │
-│   │                                                             │
-│   Multi-Agent Research ─ 4 or 16 Grok agents collaborating     │
-│   │                     Deep Solana research + intelligence   │
-│   │                                                             │
-│   Blockchain Buddies ─── 18 species with trading personalities  │
-│   │                     Procedurally generated companions       │
-│   │                                                             │
-│   Voice Mode ─────────── xAI Grok text-to-speech agent          │
-│   │                     Conversational AI + STT                 │
-│   │                                                             │
-│   Telegram Bot ───────── 60+ commands for trading + research    │
-│                         Real-time alerts, sniping, narration    │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────────┘
+No private keys are stored in the blueprint. Live trading is still gated. The lobster is cheerful, but the risk engine is not.
+
+## Lobster Boot Animation
+
+Paste this in a terminal when you want the correct deployment mood:
+
+```bash
+for frame in "🦞  " " 🦞 " "  🦞" " 🦞 "; do
+  printf "\r%s OpenClawd sandbox warming NVIDIA tensors..." "$frame"
+  sleep 0.15
+done
+printf "\r🦞 NemoClawd online. Preflight first.              \n"
 ```
 
-<!-- start-quickstart-guide -->
+```text
+       _.-._
+     .'     '.        🦞  observe
+    /  o   o  \       🦞  preflight
+   |     ^     |      🦞  paper preview
+    \  \___/  /       🦞  live only when explicitly armed
+     '.___.'
+```
 
-### Quick Start
+## Current Architecture
+
+```text
+┌──────────────────────────────────────────────────────────────────────┐
+│                             NemoClawd                                │
+│                                                                      │
+│  🦞 CLI / MCP / Blueprint                                             │
+│        │                                                             │
+│        ├─ nemoclawd-mcp                                              │
+│        │    ├─ 37 MCP tools                                          │
+│        │    ├─ Solana + Helius + Pump.fun                            │
+│        │    ├─ xAI Grok chat, vision, image, X search, research      │
+│        │    └─ Clawd Perps: preflight, paper, live preview, Vulcan   │
+│        │                                                             │
+│        ├─ nemoclawd-blueprint                                        │
+│        │    ├─ OpenClawd sandbox runner                              │
+│        │    ├─ NVIDIA hosted NIM profile                             │
+│        │    ├─ NVIDIA NCP profile                                    │
+│        │    ├─ local NIM profile                                     │
+│        │    ├─ local vLLM profile                                    │
+│        │    └─ Hermes blockchain oracle MCP launch contract          │
+│        │                                                             │
+│        └─ Policies                                                   │
+│             ├─ openclawd-sandbox.yaml                                │
+│             ├─ solana-rpc.yaml                                       │
+│             ├─ phoenix-perps.yaml                                    │
+│             └─ hermes-blockchain-oracle.yaml                         │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+## Quick Start
 
 ```bash
 git clone https://github.com/x402agent/NemoClawd.git
 cd NemoClawd
+
+# MCP package
+cd nemoclawd-mcp
 npm install
 npm run build
-npm link
-
-# Default inference route
-export OPENROUTER_API_KEY="your_openrouter_key"
-export OPENROUTER_MODEL="${OPENROUTER_MODEL:-z-ai/glm-5.2}"
-
-# Start with OpenRouter + Solana tools
-nemoclawd launch
-```
-
-The renamed npm package is `@mawdbotsonsolana/nemoclawd`. It is not published on npm yet, so source checkout plus `npm link` is the smoke-tested install path for this repo.
-
-### OpenShell Runtime
-
-NemoClawd runs OpenClaw inside NVIDIA OpenShell sandboxes. Install OpenShell directly when you want to manage gateways, policy, or inference outside the wrapper CLI:
-
-```bash
-curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/install.sh | sh
-
-# Alternative with uv
-uv tool install -U openshell
-```
-
-This repo pins `openclaw` to `2026.6.9`. The OpenShell installer supports `OPENSHELL_VERSION` for pinned or dev-channel installs.
-
-### Local Smoke Test
-
-```bash
-node bin/nemoclawd.js --help
-node bin/nemoclawd.js version
 npm test
-npm run build
-npm pack --dry-run --cache /tmp/nemoclawd-npm-cache
-npm run openrouter:smoke
+cd ..
+
+# Blueprint package
+cd nemoclawd-blueprint
+make check
+OPENCLAWD_CLI=true NEMOCLAWD_BLUEPRINT_PATH=. \
+  python orchestrator/runner.py plan --profile default --dry-run
 ```
 
-<!-- end-quickstart-guide -->
+Use `OPENCLAWD_CLI=true` only for local dry-run validation when the real `openclawd` binary is not installed. In a real sandbox flow, install OpenClawd and let the runner call `openclawd`.
 
-### OpenRouter Setup
+## NVIDIA Integration
 
-```bash
-export OPENROUTER_API_KEY="your_key"
-export OPENROUTER_MODEL="z-ai/glm-5.2"
-export HELIUS_API_KEY="your_free_key"  # From helius.dev
-```
+The blueprint has four inference profiles in `nemoclawd-blueprint/blueprint.yaml`:
 
-`OPENROUTER_MODEL` defaults to `z-ai/glm-5.2` when unset. The smoke test streams through `@openrouter/sdk` and prints reasoning-token usage when OpenRouter includes it:
-
-```bash
-npm run openrouter:smoke
-```
-
-### Grok Models
-
-| Model | What it does | Use case |
-|-------|-------------|----------|
-| `grok-4.20-reasoning` | Chat, reasoning, vision, structured output, voice | Default for everything |
-| `grok-4.20-multi-agent` | 4-16 agents collaborating in real-time | Deep research, complex analysis |
-| `grok-4-1-fast` | Quick responses, low latency | Fast queries, real-time UX |
-| `grok-imagine-image` | Image generation + editing | Memes, avatars, visualizations |
-
-### Phoenix Perps Setup
-
-NemoClawd includes Phoenix perpetual futures support through the official Vulcan CLI. It uses the same `RPC_URL` / `SOLANA_RPC_URL` configured for the rest of the Solana stack.
-
-```bash
-export RPC_URL="https://your-mainnet-rpc"
-
-# In a sandbox:
-nemoclawd <sandbox> phoenix-perps health
-nemoclawd <sandbox> phoenix-perps markets
-nemoclawd <sandbox> phoenix-perps market SOL
-nemoclawd <sandbox> phoenix-perps paper-init 10000
-nemoclawd <sandbox> phoenix-perps preflight "$VULCAN_WALLET_NAME"
-```
-
-Live-capable MCP requires explicit wallet env and still relies on Vulcan acknowledgements for dangerous tools:
-
-```bash
-export VULCAN_WALLET_NAME="my-wallet"
-export VULCAN_WALLET_PASSWORD="..."
-nemoclawd <sandbox> phoenix-perps mcp-live
-```
-
-Use `nemoclawd <sandbox> policy-add` and apply `phoenix-perps` plus `solana-rpc` before running inside a locked-down sandbox.
-
-### MCP Tools (31)
-
-**Solana Market Data:**
-- `solana_price`, `solana_trending`, `solana_token_info`, `solana_wallet_pnl`
-- `solana_search`, `solana_top_traders`, `solana_wallet_tokens`, `sol_price`
-
-**Helius Onchain:**
-- `helius_account_info`, `helius_balance`, `helius_transactions`
-- `helius_priority_fee`, `helius_das_asset`, `helius_webhook_create`
-
-**Agent Fleet:**
-- `agent_spawn`, `agent_list`, `agent_stop`
-
-**Memory:**
-- `memory_recall`, `memory_write`
-
-**Metaplex:**
-- `metaplex_mint_agent`, `metaplex_register_identity`, `metaplex_read_agent`
-
-**Pump.fun:**
-- `pump_token_scan`, `pump_buy_quote`, `pump_sell_quote`, `pump_graduation`
-
----
-
-## OODA Trading Loop
-
-```
-OBSERVE  → sol_price, trending, helius_priority_fee, memory KNOWN
-ORIENT   → score candidates (trend + momentum + liquidity + participation)
-DECIDE   → confidence ≥ 60? → size band (0.5x / 1.0x / 1.25x / 1.5x)
-ACT      → trade_execute gated at `ask` permission (human approval required)
-LEARN    → write INFERRED signals → Dream agent promotes to LEARNED
-```
-
-### Agent Fleet
-
-| Agent | Type | Description |
-|-------|------|-------------|
-| **$CLAWD** | `Clawd` | Full autonomous agent — chat, vision, image gen, multi-agent, voice |
-| **Grok Researcher** | `GrokResearcher` | 16-agent deep research with web + X search |
-| **Explorer** | `Explore` | Read-only Solana research (fast, cheap) |
-| **Scanner** | `Scanner` | Trend monitoring, surfaces high-signal opportunities |
-| **OODA** | `OODA` | Full trading cycle: Observe, Orient, Decide, Act, Learn |
-| **Dream** | `Dream` | Memory consolidation (INFERRED to LEARNED promotion) |
-| **Analyst** | `Analyst` | Deep structured research reports |
-| **Monitor** | `Monitor` | Helius WebSocket event listeners |
-
----
-
-## Blockchain Buddies
-
-Every `nemoClawd` user gets a companion — a procedurally generated Blockchain Buddy with its own wallet, trading personality, stats, and animated ASCII sprite.
-
-```bash
-nemoclawd wallet create
-```
-
-### Species (18 total)
-
-| Category | Species | Personality | Risk Level |
+| Profile | Provider | Endpoint | Model |
 |---|---|---|---|
-| **Solana Natives** | SolDog, BONK Dog, dogwifhat, Jupiter Agg, Raydium LP | Diamond Hands / Degen / Bot | Low → Degen |
-| **DeFi Archetypes** | Whale, Bull, Bear, MEV Shark, Octopus | Whale / Sniper / Ninja | Low → Medium |
-| **Memecoin Culture** | Pepe, Pump.fun, Sniper Bot | Degen / Sniper | High → Degen |
+| `default` | NVIDIA hosted inference | `https://integrate.api.nvidia.com/v1` | `nvidia/nemotron-3-super-120b-a12b` |
+| `ncp` | NVIDIA NCP | dynamic | `nvidia/nemotron-3-super-120b-a12b` |
+| `nim-local` | OpenAI-compatible local NIM | `http://nim-service.local:8000/v1` | `nvidia/nemotron-3-super-120b-a12b` |
+| `vllm` | OpenAI-compatible local vLLM | `http://localhost:8000/v1` | `nvidia/nemotron-3-nano-30b-a3b` |
 
----
+Useful env:
 
-## Telegram Trading Bot
+```bash
+export NVIDIA_API_KEY="..."
+export NIM_API_KEY="..."
+export OPENCLAWD_CLI="openclawd"
+export NEMOCLAWD_BLUEPRINT_PATH="/path/to/nemoclawd-blueprint"
+```
 
-### Commands
+Plan a run:
 
-| Command | Response |
-|---|---|
-| `/sol` | SOL price (CoinGecko) |
-| `/price <mint\|symbol>` | Token price |
-| `/trending` | Top 10 trending tokens |
-| `/wallet <address>` | Wallet PnL analysis |
-| `/scan` | Toggle background pump scanner |
-| `/snipe [config]` | Start sniper bot |
-| `/grok <question>` | Chat with Grok |
-| `/xsearch <query>` | Search X/Twitter live |
-| `/imagine <prompt>` | Generate images |
+```bash
+cd nemoclawd-blueprint
+python orchestrator/runner.py plan --profile default --dry-run
+python orchestrator/runner.py plan --profile ncp --dry-run
+python orchestrator/runner.py plan --profile nim-local --endpoint-url http://nim-service.local:8000/v1
+```
 
----
+## OpenClawd Blueprint
 
-## Deploy to Fly.io
+The blueprint was rewritten from the old OpenShell/OpenClaw naming to **OpenClawd/NemoClawd**:
+
+- `min_openclawd_version` in `blueprint.yaml`.
+- `OPENCLAWD_CLI` as the runner override.
+- `~/.openclawd` migration snapshots.
+- `nb-...` run IDs for NemoClawd blueprint runs.
+- `policies/openclawd-sandbox.yaml` as the strict base policy.
+
+Core commands:
+
+```bash
+cd nemoclawd-blueprint
+make check
+python orchestrator/runner.py plan --profile default --dry-run
+python orchestrator/runner.py apply --profile default
+python orchestrator/runner.py status
+python orchestrator/runner.py rollback --run-id nb-YYYYMMDD-HHMMSS-xxxxxxxx
+```
+
+## MCP Server
+
+`nemoclawd-mcp` now advertises **37 MCP tools**.
+
+### Clawd Perps Tools
+
+- `perps_status`
+- `perps_preflight`
+- `perps_paper_trade_preview`
+- `perps_live_trade_preview`
+- `perps_vulcan_plan`
+- `perps_vulcan_catalog`
+
+The perps runtime is intentionally preview-first:
+
+```bash
+export HELIUS_RPC_URL="https://mainnet.helius-rpc.com/?api-key=..."
+export CLAWD_PERPS_WALLET="your-wallet-address"
+export PERPS_ALLOWED_SYMBOLS="SOL,ETH,BTC"
+export PERPS_MAX_NOTIONAL_USD="250"
+export PERPS_MAX_LEVERAGE="3"
+export PERPS_MAX_SPREAD_BPS="40"
+
+# Required together before a live preview can pass preflight
+export LIVE_TRADING="true"
+export OPERATOR_CONFIRMED="true"
+export PERPS_SIM_ONLY="false"
+```
+
+Live tools still return previews. The MCP server does not sign or submit orders.
+
+### MCP Build Checks
 
 ```bash
 cd nemoclawd-mcp
-fly launch --config fly.toml
-fly secrets set HELIUS_API_KEY=your-key XAI_API_KEY=your-key MCP_API_KEY=optional-bearer-token
+npm run build
+npm run lint
+npm test
 ```
 
-Then connect via:
-```json
-{ "type": "http", "url": "https://your-app.fly.dev/mcp" }
+## Hermes Blockchain Oracle
+
+The blueprint now includes a Hermes-style blockchain oracle component. It is modeled as a read-only MCP launch contract, not a vendored virtualenv:
+
+```yaml
+blockchain_oracle:
+  enabled: true
+  package: hermes-blockchain-oracle
+  command: python
+  args: ["-m", "hermes_blockchain_oracle"]
 ```
 
----
+Planned tools:
 
-## Architecture
+- `solana_wallet_info`
+- `solana_transaction`
+- `solana_token_info`
+- `solana_recent_activity`
+- `solana_nft_portfolio`
+- `whale_detector`
+- `solana_network_stats`
 
-```
-                     ┌─────────────────────────────────────────────────────┐
-                     │                  ENTRY POINTS                       │
-                     │  nemoClawd CLI    MCP Server    Telegram Bot        │
-                     │  (interactive/   (stdio/HTTP)   60+ commands       │
-                     │   one-shot)                                        │
-                     └────────┬──────────┬────────────────┬────────────────┘
-                              │          │                │
-                              ▼          ▼                ▼
-                     ┌─────────────────────────────────────────────────────┐
-                     │                  CORE ENGINE                        │
-                     │  QueryEngine ──► xAI Grok ──► Tool Execution       │
-                     │    │              │              │               │
-                     │    │  Providers:   │   ┌──────────┤               │
-                     │    │  - xAI/Grok   │   │          │               │
-                     │    │  - OpenRouter │   ▼          ▼               │
-                     │    │  - Anthropic  │  ToolExecutor  Permission     │
-                     └─────┼──────────────┼──────────────────────────────┘
-                           │              │
-               ┌───────────┴──────────────┴──────────────────────────────┐
-               │                              │                         │
-               ▼                              ▼                         ▼
-┌──────────────────────┐  ┌──────────────────────────┐  ┌────────────────┐
-│     SUPPORT LAYER    │  │      MEMORY SYSTEM       │  │   DATA SOURCES │
-│                      │  │                          │  │                │
-│  AppState (Zustand)  │  │  KNOWN   (ephemeral,     │  │  Helius RPC    │
-│  - PermissionMode    │  │           ~60s TTL)      │  │  Helius DAS    │
-│  - OODA phase        │  │                          │  │  Pump.fun      │
-│  - PumpSignals       │  │  LEARNED (persistent,    │  │  Jupiter       │
-│                      │  │           cross-session)  │  │                │
-│  Risk Engine         │  │                          │  │  Solana Tracker│
-└──────────────────────┘  │  INFERRED (tentative,    │  │                │
-                          │           markdown)       │  │                │
-                          └──────────────────────────┘  └────────────────┘
-```
+Policy presets:
 
----
+- `policies/presets/solana-rpc.yaml`
+- `policies/presets/hermes-blockchain-oracle.yaml`
 
-## Environment Variables
+Useful env:
 
 ```bash
-# Core (free at helius.dev)
-HELIUS_API_KEY=               # RPC, DAS, enhanced txs, webhooks
-RPC_URL=                      # Preferred Solana RPC for Solana + Phoenix/Vulcan
-HELIUS_RPC_URL=               # Helius mainnet RPC
-
-# OpenRouter (default inference)
-OPENROUTER_API_KEY=           # OpenRouter chat/completions routing
-OPENROUTER_MODEL=z-ai/glm-5.2 # Default model
-
-# xAI Grok (optional)
-XAI_API_KEY=                  # Grok: chat, voice, vision, search, multi-agent
-
-# Phoenix perps / Vulcan
-PHOENIX_API_URL=https://perp-api.phoenix.trade
-VULCAN_WALLET_NAME=           # Live-capable Vulcan wallet
-VULCAN_WALLET_PASSWORD=       # Required only for live MCP
-
-# Telegram
-TELEGRAM_BOT_TOKEN=           # From @BotFather
-
-# Wallet (optional)
-SOLANA_PRIVATE_KEY=           # Base58 keypair for live trades
-SOLANA_PUBLIC_KEY=           # Default wallet
+export SOLANA_RPC_URL="https://api.mainnet-beta.solana.com"
+export RPC_URL="$SOLANA_RPC_URL"
+export HELIUS_API_KEY="..."
+export CLAWD_TOKEN="8cHzQHUS2s2h8TzCmfqPKYiM4dSt4roa3n7MyRLApump"
+export WHALE_THRESHOLD_SOL="1000"
 ```
 
----
+## Policy Posture
+
+NemoClawd keeps the sandbox strict:
+
+- Deny by default.
+- Allow OpenClawd, NVIDIA, Solana RPC, Helius, Phoenix Perps, npm, Telegram, and explicit presets.
+- Store secrets in environment variables, not YAML.
+- Keep the oracle read-only.
+- Keep perps live flow blocked unless `LIVE_TRADING=true`, `OPERATOR_CONFIRMED=true`, and `PERPS_SIM_ONLY=false`.
+
+## What Changed In This Round
+
+- Integrated Clawd Perps behavior into `nemoclawd-mcp`.
+- Added six perps MCP tools and focused tests.
+- Rewrote `nemoclawd-blueprint` from OpenShell/OpenClaw naming to OpenClawd/NemoClawd.
+- Added NVIDIA NIM/NCP/local NIM/vLLM blueprint profiles.
+- Added OpenClawd sandbox policy rename and updated policy hosts/binaries.
+- Added Hermes blockchain oracle planning, policy, and unit tests.
+- Updated build checks so the blueprint verifies the new oracle helper.
+
+## Verification
+
+These are the checks used for the current tree:
+
+```bash
+cd nemoclawd-mcp
+npm run build
+npm run lint
+npm test
+
+cd ../nemoclawd-blueprint
+make check
+make test
+OPENCLAWD_CLI=true NEMOCLAWD_BLUEPRINT_PATH=. \
+  python orchestrator/runner.py plan --profile default --dry-run
+```
 
 ## License
 
 Licensed under [Apache 2.0](LICENSE).
 
-**$CLAWD** `8cHzQHUS2s2h8TzCmfqPKYiM4dSt4roa3n7MyRLApump`
+Powered by **Solana**, **OpenClawd**, **xAI Grok**, and **NVIDIA NIM/vLLM**.
 
-Powered by **xAI Grok** from **xAI** | Built on **Solana**
+The lobster does not bypass preflight.
