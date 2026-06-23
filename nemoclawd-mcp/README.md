@@ -1,11 +1,11 @@
 # nemoClawd MCP Server
 
-xAI Grok powered Solana agentic tools with 31 MCP tools.
+xAI Grok powered Solana agentic tools with 37 MCP tools.
 
 ## Features
 
 - **xAI Grok Integration** — Chat, vision, image generation, X search, multi-agent research
-- **31 MCP Tools** — Solana market data, Helius RPC/DAS, Pump.fun trading, agent fleet
+- **37 MCP Tools** — Solana market data, Helius RPC/DAS, Pump.fun trading, agent fleet, Clawd Perps
 - **Multi-Transport** — STDIO (for Clawd Desktop, Cursor, VS Code) and HTTP (for Fly.io)
 
 ## Installation
@@ -62,6 +62,16 @@ Connect via:
 | `HELIUS_RPC_URL` | No | Custom RPC URL |
 | `BIRDEYE_API_KEY` | No | BirdEye API key |
 | `SOLANA_TRACKER_API_KEY` | No | Solana Tracker API key |
+| `CLAWD_PERPS_API_URL` | No | Phoenix perps API URL, defaults to `https://perp-api.phoenix.trade` |
+| `CLAWD_PERPS_WALLET` | No | Wallet presence gate for perps previews |
+| `PERPS_ALLOWED_SYMBOLS` | No | Comma-separated perp symbol allowlist, defaults to `SOL,ETH,BTC` |
+| `PERPS_MAX_NOTIONAL_USD` | No | Max perps notional, defaults to `250` |
+| `PERPS_MAX_LEVERAGE` | No | Max perps leverage, defaults to `3` |
+| `PERPS_MAX_SPREAD_BPS` | No | Max expected spread, defaults to `40` |
+| `LIVE_TRADING` | No | Must be `true` with the other gates for live preview to pass |
+| `OPERATOR_CONFIRMED` | No | Must be `true` with the other gates for live preview to pass |
+| `PERPS_SIM_ONLY` | No | Must be `false` with the other gates for live preview to pass |
+| `VULCAN_CATALOG_PATH` | No | Optional path to `vulcan-cli-master/agents/tool-catalog.json` |
 
 ## Tools
 
@@ -100,6 +110,14 @@ Connect via:
 - `pump_market_cap` — Market cap
 - `pump_top_tokens` — Top tokens
 - `pump_new_tokens` — New tokens
+
+### Clawd Perps (6 tools)
+- `perps_status` — Runtime mode, gates, risk envelope, integration posture
+- `perps_preflight` — Symbol/notional/leverage/spread safety gate
+- `perps_paper_trade_preview` — Preflighted Vulcan paper trade plan
+- `perps_live_trade_preview` — Live route preview, blocked unless live gates pass
+- `perps_vulcan_plan` — CLI-compatible Vulcan market/paper/live plan
+- `perps_vulcan_catalog` — Vulcan catalog posture summary
 
 ### xAI Grok (6 tools)
 - `grok_chat` — Chat with Grok 4.20

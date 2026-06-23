@@ -15,6 +15,18 @@ import {
   ListPromptsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { createServer } from "node:http";
+import {
+  buildPreflightReport,
+  buildVulcanExecutionPlan,
+  createLiveTradePreview,
+  createPaperTradePreview,
+  createPerpsStatus,
+  loadPerpsRuntimeConfig,
+  summarizeVulcanCatalog,
+  type PerpsExecution,
+  type PerpsSide,
+  type VulcanExecutionIntent,
+} from "./perps.js";
 
 // Environment
 const XAI_API_KEY = process.env.XAI_API_KEY || "";
@@ -337,6 +349,103 @@ const TOOLS = [
     },
   },
 
+  // Clawd Perps
+  {
+    name: "perps_status",
+    description: "Show Clawd Perps runtime mode, risk limits, gates, and integration posture",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "perps_preflight",
+    description: "Run the Clawd Perps safety gate before any observe, paper, or live order preview",
+    inputSchema: {
+      type: "object",
+      properties: {
+        symbol: { type: "string", description: "Perp symbol, e.g. SOL, ETH, BTC" },
+        notionalUsd: { type: "number", description: "Order notional in USD" },
+        leverage: { type: "number", description: "Optional leverage multiple" },
+        expectedSpreadBps: { type: "number", description: "Optional expected spread in basis points" },
+        execution: {
+          type: "string",
+          enum: ["observe", "paper", "vulcan-live", "rise-live"],
+          description: "Execution path to validate",
+        },
+      },
+      required: ["symbol", "notionalUsd", "execution"],
+    },
+  },
+  {
+    name: "perps_paper_trade_preview",
+    description: "Build a preflighted Vulcan paper trade preview without signing or submitting anything",
+    inputSchema: {
+      type: "object",
+      properties: {
+        symbol: { type: "string", description: "Perp symbol, e.g. SOL, ETH, BTC" },
+        side: { type: "string", enum: ["buy", "sell"], description: "Trade side" },
+        notionalUsd: { type: "number", description: "Paper trade notional in USD" },
+        expectedSpreadBps: { type: "number", description: "Optional expected spread in basis points" },
+      },
+      required: ["symbol", "side", "notionalUsd"],
+    },
+  },
+  {
+    name: "perps_live_trade_preview",
+    description: "Build a live trade preview that remains blocked unless all live-mode gates pass",
+    inputSchema: {
+      type: "object",
+      properties: {
+        symbol: { type: "string", description: "Perp symbol, e.g. SOL, ETH, BTC" },
+        side: { type: "string", enum: ["buy", "sell"], description: "Trade side" },
+        notionalUsd: { type: "number", description: "Live preview notional in USD" },
+        leverage: { type: "number", description: "Optional leverage multiple" },
+        expectedSpreadBps: { type: "number", description: "Optional expected spread in basis points" },
+        route: {
+          type: "string",
+          enum: ["rise-live", "vulcan-live"],
+          description: "Preview route, default rise-live",
+        },
+      },
+      required: ["symbol", "side", "notionalUsd"],
+    },
+  },
+  {
+    name: "perps_vulcan_plan",
+    description: "Map a market, paper, or live perps intent into a blocked/allowed Vulcan CLI plan",
+    inputSchema: {
+      type: "object",
+      properties: {
+        action: {
+          type: "string",
+          enum: [
+            "market-list",
+            "ticker",
+            "positions",
+            "paper-buy",
+            "paper-sell",
+            "live-buy",
+            "live-sell",
+          ],
+          description: "Vulcan action to plan",
+        },
+        symbol: { type: "string", description: "Perp symbol, default SOL where needed" },
+        notionalUsd: { type: "number", description: "Notional in USD for paper/live actions" },
+        expectedSpreadBps: { type: "number", description: "Optional expected spread in basis points" },
+      },
+      required: ["action"],
+    },
+  },
+  {
+    name: "perps_vulcan_catalog",
+    description: "Summarize the discovered Vulcan tool catalog for MCP/CLI posture checks",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+
   // xAI Grok
   {
     name: "grok_chat",
@@ -460,6 +569,55 @@ async function grokChat(
 
   const data = await readJsonObject(response);
   return stream ? JSON.stringify(data) : data.choices?.[0]?.message?.content || "";
+}
+
+function jsonToolResult(data: unknown) {
+  return {
+    content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+  };
+}
+
+function stringArg(args: Record<string, unknown>, key: string): string {
+  const value = args[key];
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(`${key} is required`);
+  }
+  return value;
+}
+
+function numberArg(args: Record<string, unknown>, key: string): number {
+  const value = args[key];
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`${key} must be a finite number`);
+  }
+  return value;
+}
+
+function optionalNumberArg(args: Record<string, unknown>, key: string): number | undefined {
+  const value = args[key];
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`${key} must be a finite number`);
+  }
+  return value;
+}
+
+function enumArg<T extends string>(
+  args: Record<string, unknown>,
+  key: string,
+  values: readonly T[],
+  fallback?: T,
+): T {
+  const value = args[key];
+  if (value === undefined && fallback !== undefined) {
+    return fallback;
+  }
+  if (typeof value !== "string" || !values.includes(value as T)) {
+    throw new Error(`${key} must be one of: ${values.join(", ")}`);
+  }
+  return value as T;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -749,6 +907,88 @@ async function handleToolCall(name: string, args: Record<string, unknown>) {
           },
         ],
       };
+    }
+
+    // Clawd Perps
+    case "perps_status": {
+      return jsonToolResult(createPerpsStatus(loadPerpsRuntimeConfig()));
+    }
+
+    case "perps_preflight": {
+      const config = loadPerpsRuntimeConfig();
+      return jsonToolResult(
+        buildPreflightReport(config, {
+          symbol: stringArg(args, "symbol"),
+          notionalUsd: numberArg(args, "notionalUsd"),
+          leverage: optionalNumberArg(args, "leverage"),
+          expectedSpreadBps: optionalNumberArg(args, "expectedSpreadBps"),
+          execution: enumArg(args, "execution", [
+            "observe",
+            "paper",
+            "vulcan-live",
+            "rise-live",
+          ] satisfies PerpsExecution[]),
+        }),
+      );
+    }
+
+    case "perps_paper_trade_preview": {
+      return jsonToolResult(
+        createPaperTradePreview(
+          loadPerpsRuntimeConfig(),
+          stringArg(args, "symbol"),
+          enumArg(args, "side", ["buy", "sell"] satisfies PerpsSide[]),
+          numberArg(args, "notionalUsd"),
+          optionalNumberArg(args, "expectedSpreadBps"),
+        ),
+      );
+    }
+
+    case "perps_live_trade_preview": {
+      return jsonToolResult(
+        createLiveTradePreview(
+          loadPerpsRuntimeConfig(),
+          stringArg(args, "symbol"),
+          enumArg(args, "side", ["buy", "sell"] satisfies PerpsSide[]),
+          numberArg(args, "notionalUsd"),
+          optionalNumberArg(args, "leverage"),
+          optionalNumberArg(args, "expectedSpreadBps"),
+          enumArg(args, "route", ["rise-live", "vulcan-live"] as const, "rise-live"),
+        ),
+      );
+    }
+
+    case "perps_vulcan_plan": {
+      const config = loadPerpsRuntimeConfig();
+      const action = enumArg(args, "action", [
+        "market-list",
+        "ticker",
+        "positions",
+        "paper-buy",
+        "paper-sell",
+        "live-buy",
+        "live-sell",
+      ] satisfies VulcanExecutionIntent["action"][]);
+      const symbol = typeof args.symbol === "string" && args.symbol.trim() ? args.symbol : "SOL";
+      const notionalUsd = optionalNumberArg(args, "notionalUsd") ?? 1;
+      const execution: PerpsExecution = action.startsWith("live")
+        ? "vulcan-live"
+        : action.startsWith("paper")
+          ? "paper"
+          : "observe";
+      const preflight = buildPreflightReport(config, {
+        symbol,
+        notionalUsd,
+        expectedSpreadBps: optionalNumberArg(args, "expectedSpreadBps"),
+        execution,
+      });
+      return jsonToolResult(
+        buildVulcanExecutionPlan(config, { action, symbol, notionalUsd }, preflight),
+      );
+    }
+
+    case "perps_vulcan_catalog": {
+      return jsonToolResult(await summarizeVulcanCatalog(loadPerpsRuntimeConfig()));
     }
 
     // xAI Grok
